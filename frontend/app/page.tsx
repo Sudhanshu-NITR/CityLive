@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import CityMap from "@/components/CityMap";
 import PulseFeed from "@/components/PulseFeed";
 import SubmitReportButton from "@/components/SubmitReportButton";
+import ReportModal from "@/components/ReportModal";
 import { Activity } from "lucide-react";
 import { PulseNode } from "@/types";
 
 export default function Home() {
   const [nodes, setNodes] = useState<PulseNode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     // Fetch live data from our Go API Gateway
@@ -58,7 +60,9 @@ export default function Home() {
         <CityMap nodes={nodes} />
       </section>
 
-      <SubmitReportButton />
+      <SubmitReportButton onClick={() => setIsModalOpen(true)} />
+
+      {isModalOpen && <ReportModal onClose={() => setIsModalOpen(false)} />}
     </main>
   );
 }
