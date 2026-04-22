@@ -1,17 +1,16 @@
 "use client";
 
 import { AlertTriangle, Car, MapPin } from "lucide-react";
+import { PulseNode } from "@/types";
 
-// In the future, this will be passed down as props from a live Go SSE connection
-const MOCK_NODES = [
-    { id: "1", type: "congestion", title: "Majestic Junction", time: "2 mins ago", description: "Heavy traffic buildup due to logging.", color: "text-amber-500", bg: "bg-amber-500/10" },
-    { id: "2", type: "hazard", title: "Koramangala Block 5", time: "10 mins ago", description: "Waterlogging reported on main street.", color: "text-red-500", bg: "bg-red-500/10" },
-];
+export default function PulseFeed({ nodes }: { nodes: PulseNode[] }) {
+    if (nodes.length === 0) {
+        return <p className="text-gray-500 text-sm mt-4 italic">No active pulses in your area.</p>;
+    }
 
-export default function PulseFeed() {
     return (
         <div className="mt-4 flex flex-col gap-3 overflow-y-auto pr-2 pb-20">
-            {MOCK_NODES.map((node) => (
+            {nodes.map((node) => (
                 <div key={node.id} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
                     <div className="flex items-start justify-between mb-2">
                         <div className={`flex items-center gap-2 ${node.color}`}>
