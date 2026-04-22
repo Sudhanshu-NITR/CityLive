@@ -12,7 +12,7 @@ export default function CityMap({ nodes }: { nodes: PulseNode[] }) {
                 <Map
                     defaultZoom={13}
                     defaultCenter={defaultCenter}
-                    mapId="CITYPULSE_MAP_ID"
+                    mapId="CITYLIVE_MAP_ID"
                     disableDefaultUI={true}
                 >
                     {nodes.map((node) => (

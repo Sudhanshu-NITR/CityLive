@@ -54,7 +54,7 @@ func main() {
 
 	// 2. Mock Data Ingestion / Node Endpoint for Phase 2 Visualization
 	mux.HandleFunc("/api/v1/nodes", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Fetching live nodes for CityPulse map")
+		log.Println("Fetching live nodes for CityLive map")
 		w.Header().Set("Content-Type", "application/json")
 
 		nodes := []PulseNode{
