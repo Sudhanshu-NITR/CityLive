@@ -1,15 +1,15 @@
 import os
 import google.genai as genai
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Initialize Gemini 2.5 (Make sure GEMINI_API_KEY is in your environment variables)
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+# load the environment variables
+load_dotenv()
 
-# Use the latest Pro or Flash model depending on your speed/cost needs
-# Flash is perfect for the "Flash Intelligence Layer" mentioned in your slides
-model = genai.GenerativeModel('gemini-2.5-flash')
+# Initialize Gemini 2.5 (Make sure GEMINI_API_KEY is in your environment variables)
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # In-memory store for verified nodes (To be replaced by Neo4j/Firestore later)
 verified_nodes = []
@@ -34,7 +34,10 @@ def agentic_guardrail_check(description, location):
     """
     
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
         # Parse the JSON response (For brevity, assuming perfect JSON return here. 
         # In production, use Gemini's structured outputs feature)
         import json
