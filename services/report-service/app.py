@@ -1,7 +1,9 @@
 import os
+import uuid
 import google.genai as genai
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
+from neo4j import GraphDatabase
 
 app = Flask(__name__)
 
@@ -13,6 +15,17 @@ client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # In-memory store for verified nodes (To be replaced by Neo4j/Firestore later)
 verified_nodes = []
+
+NEO4J_URI = os.environ.get("NEO4J_URI")
+NEO4J_USERNAME = os.environ.get("NEO4J_USERNAME", "neo4j")
+NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD")
+
+# --- Neo4j Connection ---
+driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))
+
+def close_driver():
+    driver.close()
+
 
 def agentic_guardrail_check(description, location):
     """
@@ -26,11 +39,11 @@ def agentic_guardrail_check(description, location):
     
     Tasks:
     1. Determine the category: 'hazard' or 'congestion'.
-    2. Assess credibility (Is this a prank/spam, or a legitimate report?).
-    3. Generate a concise, professional title for the map.
+    2. Assess credibility.
+    3. Generate a concise title.
     
     Respond strictly in JSON format like this:
-    {{"is_valid": true, "category": "hazard", "title": "Brief Title", "confidence": 0.9}}
+    {{"is_valid": true, "category": "hazard", "title": "Brief Title"}}
     """
     
     try:
@@ -47,51 +60,75 @@ def agentic_guardrail_check(description, location):
         print(f"Agent analysis failed: {e}")
         return {"is_valid": False}
 
+
+# --- Endpoints ---
 @app.route('/health', methods=['GET'])
 def health_check():
-    return jsonify({"status": "healthy", "service": "report-service"}), 200
-
+    return jsonify({"status": "healthy"}), 200
+    
 @app.route('/api/v1/reports', methods=['POST'])
 def submit_report():
     data = request.json
     description = data.get("description", "")
     location = data.get("title", "Unknown")
     
-    print(f"Received raw report: {description}")
-    
-    # Run the Agentic Check
+    # 1. Agent validates the report
     analysis = agentic_guardrail_check(description, location)
-    
     if not analysis.get("is_valid"):
         return jsonify({"status": "rejected", "message": "Failed security guardrails."}), 400
         
-    # If valid, construct the verified node
-    new_node = {
-        "id": str(len(verified_nodes) + 1),
-        "type": analysis.get("category", "hazard"),
-        "title": analysis.get("title", location),
-        "description": description,
-        "lat": data.get("lat"),
-        "lng": data.get("lng"),
-        "color": "text-red-500" if analysis.get("category") == "hazard" else "text-amber-500",
-        "bg": "bg-red-500/10" if analysis.get("category") == "hazard" else "bg-amber-500/10",
-        "time": "Just now"
-    }
+    category = analysis.get("category", "hazard")
+    color = "text-red-500" if category == "hazard" else "text-amber-500"
+    bg = "bg-red-500/10" if category == "hazard" else "bg-amber-500/10"
     
-    verified_nodes.append(new_node)
+    new_id = str(uuid.uuid4())[:8]
+
+    # 2. Write to Neo4j Graph Database
+    cypher_query = """
+    CREATE (n:PulseNode {
+        id: $id,
+        type: $type,
+        title: $title,
+        description: $description,
+        lat: $lat,
+        lng: $lng,
+        color: $color,
+        bg: $bg,
+        time: "Just now"
+    })
+    RETURN n
+    """
     
-    # Placeholder for Phase 3.5: Neo4j update would happen here
-    
+    with driver.session() as session:
+        result = session.run(cypher_query, 
+            id=new_id, type=category, title=analysis.get("title", location),
+            description=description, lat=data.get("lat"), lng=data.get("lng"),
+            color=color, bg=bg
+        )
+        record = result.single()
+        node_data = dict(record["n"])
     return jsonify({
         "status": "success", 
-        "message": "Pulse report verified and published.", 
-        "node": new_node
+        "message": "Pulse report verified and saved to Graph.", 
+        "node": node_data
     }), 201
 
-# Endpoint for Go API Gateway to fetch the dynamically verified nodes
 @app.route('/api/v1/verified_nodes', methods=['GET'])
 def get_verified_nodes():
-    return jsonify(verified_nodes), 200
+
+    # Fetch all nodes from the Graph Database
+    cypher_query = "MATCH (n:PulseNode) RETURN n"
+    
+    nodes = []
+    try:
+        with driver.session() as session:
+            result = session.run(cypher_query)
+            for record in result:
+                nodes.append(dict(record["n"]))
+        return jsonify(nodes), 200
+    except Exception as e:
+        print(f"Failed to fetch from Neo4j: {e}")
+        return jsonify([]), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
