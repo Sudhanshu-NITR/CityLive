@@ -1,5 +1,7 @@
+from operator import mod
 import os
 import uuid
+import json
 import google.genai as genai
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
@@ -33,7 +35,7 @@ def agentic_guardrail_check(description, location):
     In a full production app, you'd also pass the image payload here.
     """
     prompt = f"""
-    You are the CityPulse Sentinel Agent. Analyze the following citizen report.
+    You are the CityLive Sentinel Agent. Analyze the following citizen report.
     Location: {location}
     Description: {description}
     
@@ -53,7 +55,7 @@ def agentic_guardrail_check(description, location):
         )
         # Parse the JSON response (For brevity, assuming perfect JSON return here. 
         # In production, use Gemini's structured outputs feature)
-        import json
+        
         clean_text = response.text.replace('```json', '').replace('```', '').strip()
         return json.loads(clean_text)
     except Exception as e:
@@ -129,6 +131,63 @@ def get_verified_nodes():
     except Exception as e:
         print(f"Failed to fetch from Neo4j: {e}")
         return jsonify([]), 500
+
+
+@app.route('/api/v1/ai-insights', methods=['GET'])
+def get_ai_insights():
+
+    # 1. Extract the current state of the city from the Graph
+    cypher_query = "MATCH (n:PulseNode) RETURN n.type as type, n.title as title, n.description as description LIMIT 20"
+    
+    context_nodes = []
+
+    try:
+        with driver.session() as session:
+            result = session.run(cypher_query)
+            for record in result:
+                context_nodes.append(dict(record))
+
+    except Exception as e:
+        print(f"Graph DB Error: {e}")
+        return jsonify([{"title": "Database Error", "description": "Could not connect to AuraDB context."}]), 500
+
+    if not context_nodes:
+        return jsonify([{
+            "title": "City Status Optimal", 
+            "description": "No active hazards in the graph. Traffic and infrastructure are operating normally."
+        }]), 200
+
+    # 2. Feed the Graph Context to Gemini 2.5 for Predictive Forecasting
+    prompt = f"""
+    You are the CityLive Predictive Agent. Analyze these active city hazards from our Neo4j Graph DB:
+    {context_nodes}
+    
+    Task: Identify potential cascading effects, future risks, or secondary disruptions that city officials should prepare for based on these combined events.
+    
+    Output strictly as a JSON array of 1 or 2 insight objects in this format:
+    [
+      {{ 
+        "title": "Short Warning Title (e.g., Approaching Gridlock at X)", 
+        "description": "Explanation of the forecasted risk based on the data." 
+      }}
+    ]
+    """
+    
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        
+        clean_text = response.text.replace('```json', '').replace('```', '').strip()
+        insights = json.loads(clean_text)
+        return jsonify(insights), 200
+
+    except Exception as e:
+        print(f"Insight generation failed: {e}")
+        return jsonify([{"title": "Analysis Error", "description": "Sentinel AI offline."}]), 500
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

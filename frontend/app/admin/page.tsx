@@ -7,6 +7,7 @@ import { ShieldAlert, Train, CheckCircle, BrainCircuit, Activity, ChevronRight, 
 
 export default function AdminDashboard() {
     const [nodes, setNodes] = useState<PulseNode[]>([]);
+    const [insights, setInsights] = useState<{ title: string, description: string }[]>([]);
 
     useEffect(() => {
         // Fetch live verified data from our Go API Gateway
@@ -19,10 +20,30 @@ export default function AdminDashboard() {
                 console.error("Failed to fetch node data:", err);
             }
         };
+
+        const fetchInsights = async () => {
+            try {
+                const res = await fetch("http://localhost:8080/api/v1/ai-insights");
+                const data = await res.json();
+                setInsights(data || []);
+            } catch (err) {
+                console.error("Failed to fetch insights:", err);
+            }
+        };
+
+        // Call them both immediately on page load
         fetchNodes();
-        const intervalId = setInterval(fetchNodes, 10000);
+        fetchInsights();
+
+        // Call them both every 10 seconds
+        const intervalId = setInterval(() => {
+            fetchNodes();
+            fetchInsights();
+        }, 10000);
+
         return () => clearInterval(intervalId);
     }, []);
+
 
     return (
         <div className="min-h-screen bg-[#050505] text-white p-6 flex flex-col gap-6">
@@ -31,7 +52,7 @@ export default function AdminDashboard() {
             <header className="flex items-center justify-between bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-md">
                 <div className="flex items-center gap-3">
                     <Activity className="text-blue-500 w-8 h-8" />
-                    <h1 className="text-2xl font-bold tracking-tight">CityPulse <span className="font-light text-gray-400">| Command Center</span></h1>
+                    <h1 className="text-2xl font-bold tracking-tight">CityLive <span className="font-light text-gray-400">| Command Center</span></h1>
                 </div>
                 <nav className="flex gap-6 text-sm font-medium text-gray-400">
                     <a href="#" className="text-white hover:text-blue-400 transition">Live Map</a>
@@ -85,24 +106,30 @@ export default function AdminDashboard() {
                 <div className="col-span-3 flex flex-col gap-6">
 
                     {/* AI Insights Panel */}
-                    <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/20 rounded-2xl p-5 backdrop-blur-md flex-1">
+                    <div className="bg-linear-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/20 rounded-2xl p-5 backdrop-blur-md flex-1">
                         <h2 className="text-sm font-bold text-purple-400 tracking-wider uppercase flex items-center gap-2 mb-4">
                             <BrainCircuit size={16} />
                             Sentinel AI Insights
                         </h2>
                         <div className="space-y-4">
-                            <div className="bg-black/40 p-4 rounded-xl border border-white/5">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <AlertTriangle size={16} className="text-amber-500" />
-                                    <span className="font-semibold text-sm">Flooding Uptrend</span>
-                                </div>
-                                <p className="text-xs text-gray-400 leading-relaxed">
-                                    Historical data combined with active reports indicate a 78% probability of severe flooding in Whitefield over the next 2 hours.
-                                </p>
-                                <button className="text-xs text-purple-400 mt-3 font-semibold flex items-center hover:text-purple-300">
-                                    Expand Analysis <ChevronRight size={14} />
-                                </button>
-                            </div>
+                            {insights.length === 0 ? (
+                                <div className="text-xs text-purple-400 animate-pulse">Running Graph Analysis...</div>
+                            ) : (
+                                insights.map((insight, idx) => (
+                                    <div key={idx} className="bg-black/40 p-4 rounded-xl border border-white/5">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <AlertTriangle size={16} className="text-amber-500" />
+                                            <span className="font-semibold text-sm">{insight.title}</span>
+                                        </div>
+                                        <p className="text-xs text-gray-400 leading-relaxed">
+                                            {insight.description}
+                                        </p>
+                                        <button className="text-xs text-purple-400 mt-3 font-semibold flex items-center hover:text-purple-300">
+                                            Expand Analysis <ChevronRight size={14} />
+                                        </button>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
 
