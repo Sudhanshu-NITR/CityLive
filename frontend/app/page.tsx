@@ -28,8 +28,8 @@ export default function Home() {
     };
     fetchNodes();
 
-    // 2. Real-Time Link: Connect to the Go Event Service Stream
-    const eventSource = new EventSource("http://localhost:8081/stream");
+    // 2. Real-Time Link: Connect to the Go Event Service Stream through the API Gateway
+    const eventSource = new EventSource("http://localhost:8080/stream");
 
     eventSource.onmessage = (event) => {
       try {

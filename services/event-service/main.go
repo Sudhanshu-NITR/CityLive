@@ -41,7 +41,6 @@ func main() {
 	// 1. The endpoint Next.js connects to
 	http.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
 		// Set headers for Server-Sent Events (SSE)
-		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")

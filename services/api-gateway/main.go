@@ -46,6 +46,18 @@ func main() {
 		proxy.ServeHTTP(w, r)
 	})
 
+	// 4. Proxy incoming SSE stream to Go Event Service
+	eventTarget, err := url.Parse("http://event-service:8081")
+	if err != nil {
+		log.Fatal(err)
+	}
+	eventProxy := httputil.NewSingleHostReverseProxy(eventTarget)
+
+	mux.HandleFunc("/stream", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Proxying SSE stream to Event Service")
+		eventProxy.ServeHTTP(w, r)
+	})
+
 	log.Println("API Gateway running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", corsMiddleware(mux)))
 }
