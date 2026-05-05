@@ -18,7 +18,7 @@ export default function ReportModal({ onClose }: ReportModalProps) {
 
         try {
             // Sending data to Next.js -> Go API Gateway -> Python Service
-            const res = await fetch("http://localhost:8080/api/v1/reports", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/reports`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

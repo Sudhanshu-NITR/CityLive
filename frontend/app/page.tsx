@@ -17,7 +17,7 @@ export default function Home() {
     // 1. Initial Load: Fetch existing nodes from Go API Gateway
     const fetchNodes = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/v1/nodes");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/nodes`);
         const data = await res.json();
         setNodes(data || []);
       } catch (err) {
@@ -29,7 +29,7 @@ export default function Home() {
     fetchNodes();
 
     // 2. Real-Time Link: Connect to the Go Event Service Stream through the API Gateway
-    const eventSource = new EventSource("http://localhost:8080/stream");
+    const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL}/stream`);
 
     eventSource.onmessage = (event) => {
       try {

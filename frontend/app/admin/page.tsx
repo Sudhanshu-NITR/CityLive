@@ -13,7 +13,7 @@ export default function AdminDashboard() {
         // Fetch live verified data from our Go API Gateway
         const fetchNodes = async () => {
             try {
-                const res = await fetch("http://localhost:8080/api/v1/nodes");
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/nodes`);
                 const data = await res.json();
                 setNodes(data || []);
             } catch (err) {
@@ -23,7 +23,7 @@ export default function AdminDashboard() {
 
         const fetchInsights = async () => {
             try {
-                const res = await fetch("http://localhost:8080/api/v1/ai-insights");
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai-insights`);
                 const data = await res.json();
                 setInsights(data || []);
             } catch (err) {
