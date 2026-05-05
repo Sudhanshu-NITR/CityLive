@@ -1,7 +1,7 @@
-from operator import mod
 import os
 import uuid
 import json
+import requests
 import google.genai as genai
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
@@ -68,6 +68,7 @@ def agentic_guardrail_check(description, location):
 def health_check():
     return jsonify({"status": "healthy"}), 200
     
+    
 @app.route('/api/v1/reports', methods=['POST'])
 def submit_report():
     data = request.json
@@ -109,6 +110,18 @@ def submit_report():
         )
         record = result.single()
         node_data = dict(record["n"])
+
+    try:
+        event_payload = {
+            "type" : "NEW_PULSE_NODE",
+            "payload": node_data
+        }
+        # We use the docker-compose service name 'event-service'
+        requests.post("http://event-service:8081/publish", json=event_payload, timeout=2)
+        print("Successfully published event to broker")
+    except Exception as e:
+        print(f"Warning: Failed to publish event: {e}")
+
     return jsonify({
         "status": "success", 
         "message": "Pulse report verified and saved to Graph.", 
