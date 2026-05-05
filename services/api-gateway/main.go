@@ -5,15 +5,26 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 )
+
+// getEnv reads an environment variable or returns a default fallback value
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
+}
 
 // corsMiddleware allows Next.js (port 3000) to communicate with this gateway
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		// Dynamically get the allowed origin, defaulting to localhost:3000
+		allowedOrigin := getEnv("FRONTEND_URL", "http://localhost:3000")
+
+		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -25,8 +36,13 @@ func corsMiddleware(next http.Handler) http.Handler {
 func main() {
 	mux := http.NewServeMux()
 
+	// Load configuration from Environment Variables with safe defaults
+	reportServiceURL := getEnv("REPORT_SERVICE_URL", "http://report-service:5000")
+	eventServiceURL := getEnv("EVENT_SERVICE_URL", "http://event-service:8081")
+	port := getEnv("PORT", "8080")
+
 	// 1. Python Report Service Target
-	target, err := url.Parse("http://report-service:5000")
+	target, err := url.Parse(reportServiceURL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,13 +57,12 @@ func main() {
 	// 3. Proxy incoming GET requests for nodes to Python's verified memory store
 	mux.HandleFunc("/api/v1/nodes", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Fetching verified live nodes from Python Service")
-		// Rewrite the URL path so the Python Flask app recognizes it
 		r.URL.Path = "/api/v1/verified_nodes"
 		proxy.ServeHTTP(w, r)
 	})
 
 	// 4. Proxy incoming SSE stream to Go Event Service
-	eventTarget, err := url.Parse("http://event-service:8081")
+	eventTarget, err := url.Parse(eventServiceURL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,6 +73,6 @@ func main() {
 		eventProxy.ServeHTTP(w, r)
 	})
 
-	log.Println("API Gateway running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", corsMiddleware(mux)))
+	log.Printf("API Gateway running on port %s", port)
+	log.Fatal(http.ListenAndServe(":"+port, corsMiddleware(mux)))
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 )
 
@@ -18,6 +19,14 @@ var (
 	// Mutex to protect the clients map
 	mutex = sync.Mutex{}
 )
+
+// getEnv reads an environment variable or returns a default fallback value
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
+}
 
 func handleMessages() {
 	for {
@@ -85,6 +94,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	log.Println("Flash Intelligence Layer (Event Service) running on port 8081")
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	port := getEnv("PORT", "8081")
+	log.Printf("Flash Intelligence Layer (Event Service) running on port %s", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
