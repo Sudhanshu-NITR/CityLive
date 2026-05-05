@@ -14,3 +14,10 @@ services:
       - "8080:8080"
     depends_on:
       - report-service
+
+  event-service:
+    build:
+      context: ./event-service
+    ports:
+      - "8081:8081"
+    restart: always
