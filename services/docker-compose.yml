@@ -21,3 +21,10 @@ services:
     ports:
       - "8081:8081"
     restart: always
+
+  user-service:
+    build:
+      context: ./user-service
+    ports:
+      - "8082:8082"
+    restart: always
