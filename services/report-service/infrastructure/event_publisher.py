@@ -11,7 +11,7 @@ class EventPublisher:
         try:
             event_payload = {
                 "type": "NEW_PULSE_NODE",
-                "payload": node.to_dict()
+                "payload": node.model_dump()
             }
             requests.post(self.publish_url, json=event_payload, timeout=2)
             print("Successfully published event to broker")

@@ -16,7 +16,7 @@ class Neo4jRepository:
         RETURN n
         """
         with self.driver.session() as session:
-            result = session.run(cypher_query, **node.to_dict())
+            result = session.run(cypher_query, **node.model_dump())
             record = result.single()
             if record:
                 # We could map it back, but we already have the node object

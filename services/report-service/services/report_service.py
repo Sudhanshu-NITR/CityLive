@@ -21,7 +21,7 @@ class ReportService:
 
     def process_new_report(self, request: ReportRequest) -> Tuple[Dict, int]:
         # 1. AI Validation
-        analysis = self.ai_service.analyze_report(request.description, request.location_title)
+        analysis = self.ai_service.analyze_report(request.description, request.title)
         
         if not analysis.get("is_valid"):
             self.user_client.adjust_score(request.user_id, -20, "Failed AI guardrail verification")
@@ -38,7 +38,7 @@ class ReportService:
         new_node = PulseNode(
             id=str(uuid.uuid4())[:8],
             type=category,
-            title=analysis.get("title", request.location_title),
+            title=analysis.get("title", request.title),
             description=request.description,
             lat=request.lat,
             lng=request.lng,
@@ -56,7 +56,7 @@ class ReportService:
         return {
             "status": "success", 
             "message": "Pulse report verified and saved.", 
-            "node": saved_node.to_dict() if saved_node else None
+            "node": saved_node.model_dump() if saved_node else None
         }, 201
 
     def get_all_reports(self) -> List[Dict]:
