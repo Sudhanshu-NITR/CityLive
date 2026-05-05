@@ -1,5 +1,7 @@
-Flask==3.0.0
 google-cloud-firestore
 neo4j
 google-genai
 dotenv
+fastapi
+uvicorn
+pydantic
