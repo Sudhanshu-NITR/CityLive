@@ -22,10 +22,11 @@ export default function ReportModal({ onClose }: ReportModalProps) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                    user_id: "user_123", // Adding the citizen's ID
                     type: "hazard",
                     title: location,
                     description: description,
-                    lat: 12.9716, // In a real app, grab from navigator.geolocation
+                    lat: 12.9716,
                     lng: 77.5946,
                 }),
             });

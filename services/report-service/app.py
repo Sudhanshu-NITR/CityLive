@@ -72,13 +72,31 @@ def health_check():
 @app.route('/api/v1/reports', methods=['POST'])
 def submit_report():
     data = request.json
+    user_id = data.get("user_id", "anonymous")
     description = data.get("description", "")
     location = data.get("title", "Unknown")
     
     # 1. Agent validates the report
     analysis = agentic_guardrail_check(description, location)
     if not analysis.get("is_valid"):
+        if user_id != "anonymous":
+            try:
+                # Penalize the user by 20 points
+                requests.post(f"http://user-service:8082/api/v1/users/{user_id}/adjust-score", 
+                              json={"adjustment": -20, "reason": "Failed AI guardrail verification"}, timeout=2)
+            except Exception as e:
+                pass
         return jsonify({"status": "rejected", "message": "Failed security guardrails."}), 400
+        
+    # If Gemini verifies it as TRUE:
+    if user_id != "anonymous":
+        try:
+            # Reward the user with 5 points
+            requests.post(f"http://user-service:8082/api/v1/users/{user_id}/adjust-score", 
+                          json={"adjustment": 20, "reason": "Successfully verified hazard"}, timeout=2)
+        except Exception as e:
+            pass
+
         
     category = analysis.get("category", "hazard")
     color = "text-red-500" if category == "hazard" else "text-amber-500"
