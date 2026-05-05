@@ -18,9 +18,13 @@ client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 # In-memory store for verified nodes (To be replaced by Neo4j/Firestore later)
 verified_nodes = []
 
+# Configuration from Environment Variables
 NEO4J_URI = os.environ.get("NEO4J_URI")
 NEO4J_USERNAME = os.environ.get("NEO4J_USERNAME", "neo4j")
 NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD")
+USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://user-service:8082")
+EVENT_SERVICE_URL = os.getenv("EVENT_SERVICE_URL", "http://event-service:8081")
+PORT = int(os.getenv("PORT", 5000))
 
 # --- Neo4j Connection ---
 driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))
@@ -82,7 +86,7 @@ def submit_report():
         if user_id != "anonymous":
             try:
                 # Penalize the user by 20 points
-                requests.post(f"http://user-service:8082/api/v1/users/{user_id}/adjust-score", 
+                requests.post(f"{USER_SERVICE_URL}/api/v1/users/{user_id}/adjust-score", 
                               json={"adjustment": -20, "reason": "Failed AI guardrail verification"}, timeout=2)
             except Exception as e:
                 pass
@@ -92,7 +96,7 @@ def submit_report():
     if user_id != "anonymous":
         try:
             # Reward the user with 5 points
-            requests.post(f"http://user-service:8082/api/v1/users/{user_id}/adjust-score", 
+            requests.post(f"{USER_SERVICE_URL}/api/v1/users/{user_id}/adjust-score", 
                           json={"adjustment": 20, "reason": "Successfully verified hazard"}, timeout=2)
         except Exception as e:
             pass
@@ -135,7 +139,7 @@ def submit_report():
             "payload": node_data
         }
         # We use the docker-compose service name 'event-service'
-        requests.post("http://event-service:8081/publish", json=event_payload, timeout=2)
+        requests.post(f"{EVENT_SERVICE_URL}/publish", json=event_payload, timeout=2)
         print("Successfully published event to broker")
     except Exception as e:
         print(f"Warning: Failed to publish event: {e}")
@@ -221,4 +225,4 @@ def get_ai_insights():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=PORT)
