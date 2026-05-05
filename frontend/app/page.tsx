@@ -14,7 +14,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    // Fetch live data from our Go API Gateway
+    // 1. Initial Load: Fetch existing nodes from Go API Gateway
     const fetchNodes = async () => {
       try {
         const res = await fetch("http://localhost:8080/api/v1/nodes");
@@ -26,13 +26,32 @@ export default function Home() {
         setLoading(false);
       }
     };
-
     fetchNodes();
 
-    // In the future, we'll replace this interval with WebSockets!
-    const intervalId = setInterval(fetchNodes, 10000);
-    return () => clearInterval(intervalId);
+    // 2. Real-Time Link: Connect to the Go Event Service Stream
+    const eventSource = new EventSource("http://localhost:8081/stream");
+
+    eventSource.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === "NEW_PULSE_NODE") {
+          // Instantly append the new verified node to our state!
+          setNodes((prevNodes) => [...prevNodes, message.payload]);
+
+          // Optional: You can play a sound or trigger a toast notification here
+          console.log("Live update received from Flash Intelligence Layer!");
+        }
+      } catch (err) {
+        console.error("Error parsing event stream data:", err);
+      }
+    };
+
+    // Cleanup connection when user leaves the page
+    return () => {
+      eventSource.close();
+    };
   }, []);
+
 
   return (
     <main className="flex h-screen bg-[#0a0a0a] text-white overflow-hidden p-4 relative">
