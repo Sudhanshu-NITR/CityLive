@@ -35,7 +35,7 @@ app.post('/api/v1/users/:id/adjust-score', (req, res) => {
     res.json({ success: true, new_score: users[userId].credibility_score });
 });
 
-const PORT = 8082;
+const PORT = process.env.PORT || 8082;
 app.listen(PORT, () => {
     console.log(`User Service (Trust Engine) running on port ${PORT}`);
 });
