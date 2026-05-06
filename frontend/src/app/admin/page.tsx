@@ -57,24 +57,33 @@ export default function AdminDashboard() {
             <div className="relative z-10 flex flex-col h-full p-6 pointer-events-none gap-6">
 
                 {/* Top Navigation Bar */}
-                <header className="flex items-center justify-between bg-black/40 border border-white/10 p-5 rounded-2xl backdrop-blur-2xl shadow-2xl pointer-events-auto">
-                    <div className="flex items-center gap-3">
+                <header className="relative z-50 flex items-center bg-black/40 border border-white/10 p-5 rounded-2xl backdrop-blur-2xl shadow-2xl pointer-events-auto">
+                    {/* Left: Logo & Branding */}
+                    <div className="flex items-center gap-3 w-1/4">
                         <div className="p-2 bg-blue-500/20 rounded-xl border border-blue-500/30">
                             <Activity className="text-blue-400 w-6 h-6 animate-pulse" />
                         </div>
                         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
                             <span>City<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300">Live</span></span>
                             <span className="font-light text-gray-500 text-lg">|</span>
-                            <span className="font-medium text-gray-300 text-lg">Command Center</span>
+                            <span className="font-medium text-gray-300 text-lg whitespace-nowrap">Command Center</span>
                         </h1>
                     </div>
-                    <nav className="flex gap-8 text-sm font-semibold text-gray-400">
-                        <a href="#" className="text-white hover:text-cyan-400 transition-colors">Live Map</a>
-                        <a href="#" className="hover:text-cyan-400 transition-colors">Reports</a>
-                        <a href="#" className="hover:text-cyan-400 transition-colors">Analytics</a>
-                        <a href="#" className="hover:text-cyan-400 transition-colors">AI Insights</a>
-                    </nav>
-                    <UserSwitcher />
+
+                    {/* Center: Navigation Buttons */}
+                    <div className="flex-1 flex justify-center">
+                        <nav className="flex gap-8 text-sm font-semibold text-gray-400">
+                            <a href="#" className="text-white hover:text-cyan-400 transition-colors">Live Map</a>
+                            <a href="#" className="hover:text-cyan-400 transition-colors">Reports</a>
+                            <a href="#" className="hover:text-cyan-400 transition-colors">Analytics</a>
+                            <a href="#" className="hover:text-cyan-400 transition-colors">AI Insights</a>
+                        </nav>
+                    </div>
+
+                    {/* Right: Persona Switcher */}
+                    <div className="w-1/4 flex justify-end">
+                        <UserSwitcher />
+                    </div>
                 </header>
 
                 <div className="flex-1 flex justify-between gap-6 overflow-hidden">

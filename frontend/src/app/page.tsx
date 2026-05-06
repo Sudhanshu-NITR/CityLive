@@ -44,6 +44,11 @@ export default function Home() {
                 <div className="absolute inset-0 bg-linear-to-r from-[#050505] via-black/40 to-transparent pointer-events-none" />
             </div>
 
+            {/* Floating User Persona Switcher (Top Right) */}
+            <div className="absolute top-6 right-6 z-100 pointer-events-auto">
+                <UserSwitcher />
+            </div>
+
             {/* Floating UI Container */}
             <div className="relative z-10 flex h-full p-6 pointer-events-none">
 
@@ -60,7 +65,6 @@ export default function Home() {
                                 City<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300">Live</span>
                             </h1>
                         </div>
-                        <UserSwitcher />
                     </header>
 
                     {/* Live Feed Container */}

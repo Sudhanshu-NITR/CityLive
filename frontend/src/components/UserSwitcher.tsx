@@ -39,20 +39,20 @@ export default function UserSwitcher() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    if (!user) return null;
+    // if (!user) return null;
 
     return (
-        <div className="relative z-50" ref={dropdownRef}>
-            <button 
+        <div className="relative z-100" ref={dropdownRef}>
+            <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 p-1.5 pr-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all"
             >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white shadow-inner ${user.role === 'admin' ? 'bg-gradient-to-br from-red-600 to-purple-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'}`}>
-                    {user.name.charAt(0)}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white shadow-inner ${user?.role === 'admin' ? 'bg-linear-to-br from-red-600 to-purple-600' : 'bg-linear-to-br from-blue-500 to-cyan-500'}`}>
+                    {user?.name?.charAt(0) || <UserIcon size={14} />}
                 </div>
                 <div className="flex flex-col items-start text-left">
-                    <span className="text-xs font-bold text-gray-200 leading-tight">{user.name}</span>
-                    <span className="text-[9px] font-semibold tracking-widest uppercase text-gray-400 leading-tight">{user.role}</span>
+                    <span className="text-xs font-bold text-gray-200 leading-tight">{user?.name || "Select Persona"}</span>
+                    <span className="text-[9px] font-semibold tracking-widest uppercase text-gray-400 leading-tight">{user?.role || "Citizen / Admin"}</span>
                 </div>
                 <ChevronDown size={14} className={`text-gray-400 ml-1 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -66,7 +66,7 @@ export default function UserSwitcher() {
                         <button
                             key={u.id}
                             onClick={() => { switchUser(u); setIsOpen(false); }}
-                            className={`w-full text-left px-4 py-2 text-sm flex items-center gap-3 transition-colors ${u.id === user.id ? 'bg-blue-500/10 text-blue-400 font-semibold' : 'text-gray-300 hover:bg-white/5'}`}
+                            className={`w-full text-left px-4 py-2 text-sm flex items-center gap-3 transition-colors ${u.id === user?.id ? 'bg-blue-500/10 text-blue-400 font-semibold' : 'text-gray-300 hover:bg-white/5'}`}
                         >
                             {u.role === "admin" ? <ShieldAlert size={14} className="text-red-400" /> : <UserIcon size={14} className="text-blue-400" />}
                             {u.name}
