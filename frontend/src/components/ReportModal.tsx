@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, UploadCloud, MapPin, AlertTriangle } from "lucide-react";
+import { apiClient } from "@/services/api";
 
 interface ReportModalProps {
     onClose: () => void;
@@ -17,33 +18,25 @@ export default function ReportModal({ onClose }: ReportModalProps) {
         setLoading(true);
 
         try {
-            // Sending data to Next.js -> Go API Gateway -> Python Service
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/reports`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user_id: "user_123", // Adding the citizen's ID
-                    type: "hazard",
-                    title: location,
-                    description: description,
-                    lat: 12.9716,
-                    lng: 77.5946,
-                }),
+            // Use the API Service instead of raw fetch
+            await apiClient.submitReport({
+                user_id: "user_123",
+                description: description,
+                title: location,
+                lat: 12.9716,
+                lng: 77.5946,
             });
 
-            if (res.ok) {
-                alert("Pulse Report submitted successfully for AI validation!");
-                onClose();
-            } else {
-                alert("Failed to submit report.");
-            }
-        } catch (err) {
+            alert("Pulse Report submitted successfully for AI validation!");
+            onClose();
+        } catch (err: any) {
             console.error(err);
-            alert("Error connecting to API Gateway.");
+            alert(`Error: ${err.message || 'Failed to connect to API Gateway.'}`);
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
