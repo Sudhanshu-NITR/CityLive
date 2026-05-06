@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . ./ 
 
-RUN go build -o main ./cmd/api-gateway/main.go
+RUN go build -o gateway ./cmd/api-gateway/main.go
 
 # -------------------------
 FROM alpine:latest

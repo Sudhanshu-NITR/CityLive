@@ -19,3 +19,10 @@ export interface ReportRequest {
     lat: number;
     lng: number;
 }
+
+export interface User {
+    id: string;
+    name: string;
+    credibility_score: number;
+    role: "citizen" | "admin";
+}

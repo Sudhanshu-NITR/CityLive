@@ -48,5 +48,22 @@ func SetupRouter(cfg *config.Config) *http.ServeMux {
 		eventProxy.ServeHTTP(w, r)
 	})
 
+	// 3. Node.js User Service Target
+	userTarget, err := url.Parse(cfg.UserServiceURL)
+	if err != nil {
+		log.Fatalf("Failed to parse UserServiceURL: %v", err)
+	}
+	userProxy := httputil.NewSingleHostReverseProxy(userTarget)
+
+	// Proxy incoming User Service requests
+	mux.HandleFunc("/api/v1/users", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Proxying request to User Service")
+		userProxy.ServeHTTP(w, r)
+	})
+	mux.HandleFunc("/api/v1/users/", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Proxying request to User Service")
+		userProxy.ServeHTTP(w, r)
+	})
+
 	return mux
 }

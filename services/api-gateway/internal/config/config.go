@@ -9,6 +9,7 @@ type Config struct {
 	FrontendURL      string
 	ReportServiceURL string
 	EventServiceURL  string
+	UserServiceURL   string
 }
 
 func getEnv(key, fallback string) string {
@@ -25,5 +26,6 @@ func LoadConfig() *Config {
 		FrontendURL:      getEnv("FRONTEND_URL", "http://localhost:3000"),
 		ReportServiceURL: getEnv("REPORT_SERVICE_URL", "http://report-service:5000"),
 		EventServiceURL:  getEnv("EVENT_SERVICE_URL", "http://event-service:8081"),
+		UserServiceURL:   getEnv("USER_SERVICE_URL", "http://user-service:8082"),
 	}
 }

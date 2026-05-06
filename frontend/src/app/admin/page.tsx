@@ -7,6 +7,7 @@ import { PulseNode } from "@/types";
 import { ShieldAlert, Train, CheckCircle, BrainCircuit, Activity, ChevronRight, AlertTriangle } from "lucide-react";
 import { apiClient } from "@/services/api";
 import { useLiveNodes } from "@/hooks/useLiveNodes";
+import UserSwitcher from "@/components/UserSwitcher";
 
 export default function AdminDashboard() {
     const [initialNodes, setInitialNodes] = useState<PulseNode[]>([]);
@@ -73,9 +74,7 @@ export default function AdminDashboard() {
                         <a href="#" className="hover:text-cyan-400 transition-colors">Analytics</a>
                         <a href="#" className="hover:text-cyan-400 transition-colors">AI Insights</a>
                     </nav>
-                    <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-600 to-purple-600 flex items-center justify-center font-bold shadow-lg shadow-blue-500/20 border border-white/10">
-                        AD
-                    </div>
+                    <UserSwitcher />
                 </header>
 
                 <div className="flex-1 flex justify-between gap-6 overflow-hidden">
