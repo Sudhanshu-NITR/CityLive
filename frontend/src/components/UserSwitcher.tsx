@@ -45,7 +45,7 @@ export default function UserSwitcher() {
         <div className="relative z-100" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 p-1.5 pr-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all"
+                className="flex items-center gap-2 p-1.5 pr-3 bg-black/40 hover:bg-black/30 border border-white/10 rounded-full transition-all cursor-pointer"
             >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white shadow-inner ${user?.role === 'admin' ? 'bg-linear-to-br from-red-600 to-purple-600' : 'bg-linear-to-br from-blue-500 to-cyan-500'}`}>
                     {user?.name?.charAt(0) || <UserIcon size={14} />}
