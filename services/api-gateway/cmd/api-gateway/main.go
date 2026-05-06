@@ -8,9 +8,15 @@ import (
 	"github.com/Sudhanshu-NITR/CityLive/services/api-gateway/internal/config"
 	"github.com/Sudhanshu-NITR/CityLive/services/api-gateway/internal/middleware"
 	"github.com/Sudhanshu-NITR/CityLive/services/api-gateway/internal/proxy"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// 0. Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using system environment variables")
+	}
+
 	// 1. Load Configuration
 	cfg := config.LoadConfig()
 

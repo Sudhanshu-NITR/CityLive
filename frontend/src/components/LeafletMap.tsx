@@ -53,7 +53,7 @@ export default function LeafletMap({ nodes, center }: { nodes: PulseNode[], cent
     return (
         <div className="relative w-full h-full overflow-hidden rounded-xl">
             {/* Map Overlay Layer for extra dimming if needed */}
-            <div className="absolute inset-0 z-[10] pointer-events-none bg-black/10 shadow-[inset_0_0_100px_rgba(0,0,0,0.3)]" />
+            <div className="absolute inset-0 z-10 pointer-events-none bg-black/10 shadow-[inset_0_0_100px_rgba(0,0,0,0.3)]" />
 
             <MapContainer
                 center={[center.lat, center.lng]}

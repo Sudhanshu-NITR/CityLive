@@ -5,8 +5,10 @@ import { User } from "@/types";
 import { apiClient } from "@/services/api";
 import { useUser } from "@/hooks/useUser";
 import { ChevronDown, User as UserIcon, ShieldAlert } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function UserSwitcher() {
+    const router = useRouter();
     const { user, switchUser } = useUser();
     const [users, setUsers] = useState<User[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -16,6 +18,7 @@ export default function UserSwitcher() {
         const loadUsers = async () => {
             try {
                 const data = await apiClient.getUsers();
+                console.log("data-> ", data);
                 setUsers(data || []);
                 // If no user is logged in, default to the first citizen
                 if (!localStorage.getItem('citylive_current_user') && data.length > 0) {
@@ -65,7 +68,15 @@ export default function UserSwitcher() {
                     {users.map(u => (
                         <button
                             key={u.id}
-                            onClick={() => { switchUser(u); setIsOpen(false); }}
+                            onClick={() => {
+                                switchUser(u);
+                                setIsOpen(false);
+                                if (u.role === 'admin') {
+                                    router.push('/admin');
+                                } else {
+                                    router.push('/');
+                                }
+                            }}
                             className={`w-full text-left px-4 py-2 text-sm flex items-center gap-3 transition-colors ${u.id === user?.id ? 'bg-blue-500/10 text-blue-400 font-semibold' : 'text-gray-300 hover:bg-white/5'}`}
                         >
                             {u.role === "admin" ? <ShieldAlert size={14} className="text-red-400" /> : <UserIcon size={14} className="text-blue-400" />}
