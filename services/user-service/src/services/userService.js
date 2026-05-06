@@ -6,6 +6,10 @@ class UserService {
         return userRepository.findById(id);
     }
 
+    getAllUsers() {
+        return userRepository.findAll();
+    }
+
     adjustUserScore(id, adjustment, reason) {
         const user = userRepository.findById(id);
         if (!user) {

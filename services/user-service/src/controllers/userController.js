@@ -4,6 +4,10 @@ import { userService } from "../services/userService.js"
 class UserController {
     // The contoller just parses the request and determines the HTTP status code
 
+    getAllUsers(req, res) {
+        res.json(userService.getAllUsers());
+    }
+
     getUser(req, res) {
         const user = userService.getUserById(req.params.id);
 
