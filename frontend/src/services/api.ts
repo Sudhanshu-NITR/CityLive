@@ -33,5 +33,12 @@ export const apiClient = {
         const res = await fetch(`${GATEWAY_URL}/api/v1/ai-insights`);
         if (!res.ok) throw new Error('Failed to fetch insights');
         return res.json();
+    },
+
+    // Get all users for the switcher
+    getUsers: async () => {
+        const res = await fetch(`${GATEWAY_URL}/api/v1/users`);
+        if (!res.ok) throw new Error('Failed to fetch users');
+        return res.json();
     }
 };

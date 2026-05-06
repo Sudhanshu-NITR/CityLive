@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { X, UploadCloud, MapPin, AlertTriangle } from "lucide-react";
 import { apiClient } from "@/services/api";
+import { useUser } from "@/hooks/useUser";
 
 interface ReportModalProps {
     onClose: () => void;
 }
 
 export default function ReportModal({ onClose }: ReportModalProps) {
+    const { user } = useUser();
     const [description, setDescription] = useState("");
     const [location, setLocation] = useState("Majestic Junction"); // Default for now
     const [loading, setLoading] = useState(false);
@@ -20,7 +22,7 @@ export default function ReportModal({ onClose }: ReportModalProps) {
         try {
             // Use the API Service instead of raw fetch
             await apiClient.submitReport({
-                user_id: "user_123",
+                user_id: user ? user.id : "citizen_001",
                 description: description,
                 title: location,
                 lat: 12.9716,

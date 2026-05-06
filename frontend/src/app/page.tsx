@@ -10,6 +10,7 @@ import { Activity } from "lucide-react";
 import { PulseNode } from "@/types";
 import { apiClient } from "@/services/api";
 import { useLiveNodes } from "@/hooks/useLiveNodes";
+import UserSwitcher from "@/components/UserSwitcher";
 
 export default function Home() {
     const [initialNodes, setInitialNodes] = useState<PulseNode[]>([]);
@@ -59,6 +60,7 @@ export default function Home() {
                                 City<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300">Live</span>
                             </h1>
                         </div>
+                        <UserSwitcher />
                     </header>
 
                     {/* Live Feed Container */}
