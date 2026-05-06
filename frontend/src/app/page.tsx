@@ -40,7 +40,7 @@ export default function Home() {
             <div className="absolute inset-0 z-0">
                 <CityMap nodes={nodes} />
                 {/* Subtle gradient overlay so the UI pops against the map */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-black/40 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-r from-[#050505] via-black/40 to-transparent pointer-events-none" />
             </div>
 
             {/* Floating UI Container */}
@@ -56,14 +56,14 @@ export default function Home() {
                                 <Activity className="text-blue-400 w-6 h-6 animate-pulse" />
                             </div>
                             <h1 className="text-2xl font-bold tracking-tight text-white">
-                                City<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Live</span>
+                                City<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300">Live</span>
                             </h1>
                         </div>
                     </header>
 
                     {/* Live Feed Container */}
                     <div className="flex-1 flex flex-col bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-                        <div className="p-5 border-b border-white/5 flex justify-between items-center bg-gradient-to-b from-white/5 to-transparent">
+                        <div className="p-5 border-b border-white/5 flex justify-between items-center bg-linear-to-b from-white/5 to-transparent">
                             <div>
                                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                     <span className="relative flex h-2.5 w-2.5">

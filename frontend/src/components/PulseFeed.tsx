@@ -27,7 +27,7 @@ export default function PulseFeed({ nodes }: { nodes: PulseNode[] }) {
                         className="group relative overflow-hidden rounded-xl bg-black/40 border border-white/10 backdrop-blur-md hover:bg-white/5 transition-all duration-300 cursor-pointer hover:-translate-y-1 shadow-lg hover:shadow-2xl"
                     >
                         {/* Glowing Edge Indicator */}
-                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${isHazard ? 'bg-gradient-to-b from-red-500 to-orange-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]' : 'bg-gradient-to-b from-amber-400 to-yellow-500 shadow-[0_0_15px_rgba(245,158,11,0.8)]'}`} />
+                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${isHazard ? 'bg-linear-to-b from-red-500 to-orange-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]' : 'bg-linear-to-b from-amber-400 to-yellow-500 shadow-[0_0_15px_rgba(245,158,11,0.8)]'}`} />
 
                         <div className="p-4 pl-5">
                             <div className="flex items-center justify-between mb-3">

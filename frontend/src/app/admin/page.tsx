@@ -49,7 +49,7 @@ export default function AdminDashboard() {
             <div className="absolute inset-0 z-0">
                 <CityMap nodes={nodes} />
                 {/* Dual-sided gradient to ensure both sidebars are readable */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-r from-black/80 via-transparent to-black/80 pointer-events-none" />
             </div>
 
             {/* Foreground UI */}
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
                             <Activity className="text-blue-400 w-6 h-6 animate-pulse" />
                         </div>
                         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                            <span>City<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Live</span></span>
+                            <span>City<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300">Live</span></span>
                             <span className="font-light text-gray-500 text-lg">|</span>
                             <span className="font-medium text-gray-300 text-lg">Command Center</span>
                         </h1>
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
                         <a href="#" className="hover:text-cyan-400 transition-colors">Analytics</a>
                         <a href="#" className="hover:text-cyan-400 transition-colors">AI Insights</a>
                     </nav>
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center font-bold shadow-lg shadow-blue-500/20 border border-white/10">
+                    <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-600 to-purple-600 flex items-center justify-center font-bold shadow-lg shadow-blue-500/20 border border-white/10">
                         AD
                     </div>
                 </header>
@@ -93,7 +93,7 @@ export default function AdminDashboard() {
 
                         {/* Pending Reports */}
                         <div className="flex-1 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden min-h-[300px]">
-                            <div className="p-5 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
+                            <div className="p-5 border-b border-white/5 bg-linear-to-b from-white/5 to-transparent">
                                 <h2 className="text-sm font-bold text-gray-300 tracking-wider uppercase">Pending Review (21)</h2>
                             </div>
                             <div className="flex flex-col gap-3 overflow-y-auto p-4">
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
 
                         {/* Sentinel AI Panel */}
                         <div className="bg-black/40 backdrop-blur-2xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-900/20 flex-1 overflow-hidden flex flex-col">
-                            <div className="p-5 border-b border-purple-500/10 bg-gradient-to-br from-purple-900/30 to-transparent">
+                            <div className="p-5 border-b border-purple-500/10 bg-linear-to-br from-purple-900/30 to-transparent">
                                 <h2 className="text-sm font-bold text-purple-400 tracking-wider uppercase flex items-center gap-2">
                                     <BrainCircuit size={18} />
                                     Sentinel AI Insights
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
 
                         {/* Action Center */}
                         <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl">
-                            <div className="p-5 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent">
+                            <div className="p-5 border-b border-white/5 bg-linear-to-b from-white/5 to-transparent">
                                 <h2 className="text-sm font-bold text-gray-300 tracking-wider uppercase">Emergency Actions</h2>
                             </div>
                             <div className="p-5 flex flex-col gap-3">
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
                                     <ShieldAlert size={16} />
                                     Issue City-Wide Alert
                                 </button>
-                                <button className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl text-sm font-semibold shadow-[0_0_20px_rgba(37,99,235,0.3)] transition flex justify-center items-center gap-2">
+                                <button className="w-full py-3.5 bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl text-sm font-semibold shadow-[0_0_20px_rgba(37,99,235,0.3)] transition flex justify-center items-center gap-2">
                                     <Activity size={16} />
                                     Notify Response Teams
                                 </button>
