@@ -45,11 +45,11 @@ export default function Home() {
                     approvedNodes={approvedNodes}
                     validationNodes={validationNodes}
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-black/40 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-r from-[#050505] via-black/40 to-transparent pointer-events-none" />
             </div>
 
             {/* User Persona Switcher */}
-            <div className="absolute top-6 right-6 z-[100] pointer-events-auto">
+            <div className="absolute top-6 right-6 z-100 pointer-events-auto">
                 <UserSwitcher />
             </div>
 
@@ -63,7 +63,7 @@ export default function Home() {
                             <Activity className="text-blue-400 w-6 h-6 animate-pulse" />
                         </div>
                         <h1 className="text-2xl font-bold tracking-tight text-white">
-                            City<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Live</span>
+                            City<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300">Live</span>
                         </h1>
                         <div className="ml-auto flex items-center gap-1.5">
                             <span className="relative flex h-2 w-2">
@@ -88,7 +88,7 @@ export default function Home() {
 
                     {/* Active Hazards Feed */}
                     <div className="flex-1 flex flex-col bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-                        <div className="p-5 border-b border-white/5 flex justify-between items-center bg-gradient-to-b from-white/5 to-transparent">
+                        <div className="p-5 border-b border-white/5 flex justify-between items-center bg-linear-to-b from-white/5 to-transparent">
                             <div>
                                 <h2 className="text-sm font-bold text-white flex items-center gap-2">
                                     <ShieldAlert size={16} className="text-red-400" />
@@ -121,7 +121,7 @@ export default function Home() {
                                         key={node.id}
                                         className="group relative overflow-hidden rounded-xl bg-black/40 border border-red-500/10 hover:border-red-500/30 backdrop-blur-md hover:bg-red-500/5 transition-all duration-300 cursor-pointer hover:-translate-y-0.5 shadow-lg"
                                     >
-                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-red-500 to-red-700 shadow-[0_0_12px_rgba(239,68,68,0.7)]" />
+                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-linear-to-b from-red-500 to-red-700 shadow-[0_0_12px_rgba(239,68,68,0.7)]" />
                                         <div className="p-4 pl-5">
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-red-500/10 text-red-400 border border-red-500/20">

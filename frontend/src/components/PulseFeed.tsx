@@ -19,7 +19,7 @@ export default function PulseFeed({ nodes }: { nodes: ApprovedNode[] }) {
     return (
         <div className="h-full overflow-y-auto p-4 space-y-4">
             {nodes.map((node) => {
-                const isHazard = node.type === "hazard";
+                const isHazard = node.hazard_type.toLowerCase() === "hazard" || node.hazard_type.toLowerCase() === "danger";
 
                 return (
                     <div
@@ -34,12 +34,12 @@ export default function PulseFeed({ nodes }: { nodes: ApprovedNode[] }) {
                                 {/* Type Badge */}
                                 <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${isHazard ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
                                     {isHazard ? <AlertTriangle size={14} /> : <Car size={14} />}
-                                    {node.type}
+                                    {node.hazard_type}
                                 </div>
                                 {/* Time Badge */}
                                 <span className="text-[11px] font-medium text-gray-400 flex items-center gap-1 bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
                                     <Clock size={10} className="text-gray-500" />
-                                    {node.time}
+                                    {new Date(node.approved_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                             </div>
 
@@ -49,7 +49,7 @@ export default function PulseFeed({ nodes }: { nodes: ApprovedNode[] }) {
                             </h3>
 
                             <p className="text-gray-400 text-xs pl-6 line-clamp-2 leading-relaxed">
-                                {node.description}
+                                {node.admin_explanation}
                             </p>
                         </div>
                     </div>

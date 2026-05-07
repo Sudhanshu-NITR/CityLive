@@ -144,7 +144,7 @@ export default function AdminDashboard() {
                     validationNodes={validationNodes}
                     hoveredReport={hoveredReport}
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-r from-black/80 via-transparent to-black/80 pointer-events-none" />
             </div>
 
             {/* Foreground UI */}
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
                             <Activity className="text-blue-400 w-5 h-5 animate-pulse" />
                         </div>
                         <h1 className="text-xl font-bold text-white">
-                            City<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Live</span>
+                            City<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300">Live</span>
                             <span className="text-gray-500 font-light ml-2 text-base">| Command Center</span>
                         </h1>
                     </div>
@@ -195,7 +195,7 @@ export default function AdminDashboard() {
 
                         {/* ValidationNode List */}
                         <div className="flex-1 flex flex-col bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-                            <div className="p-4 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent shrink-0">
+                            <div className="p-4 border-b border-white/5 bg-linear-to-b from-white/5 to-transparent shrink-0">
                                 <h2 className="text-sm font-bold text-amber-400 flex items-center gap-2">
                                     <BrainCircuit size={16} />
                                     AI Validation Queue
@@ -239,7 +239,7 @@ export default function AdminDashboard() {
                         {/* Selected ValidationNode detail */}
                         {selectedNode ? (
                             <div className="flex-1 flex flex-col bg-black/40 backdrop-blur-2xl border border-amber-500/20 rounded-2xl shadow-2xl overflow-hidden">
-                                <div className="p-4 border-b border-amber-500/10 bg-gradient-to-br from-amber-900/20 to-transparent shrink-0">
+                                <div className="p-4 border-b border-amber-500/10 bg-linear-to-br from-amber-900/20 to-transparent shrink-0">
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
@@ -316,7 +316,7 @@ export default function AdminDashboard() {
                                     <button
                                         onClick={() => handleApprove(selectedNode)}
                                         disabled={!!actionLoading}
-                                        className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white text-sm font-semibold shadow-[0_0_16px_rgba(34,197,94,0.25)] transition disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                        className="flex-1 py-2.5 rounded-xl bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white text-sm font-semibold shadow-[0_0_16px_rgba(34,197,94,0.25)] transition disabled:opacity-50 flex items-center justify-center gap-1.5"
                                     >
                                         {actionLoading === selectedNode.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
                                         Approve
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
 
                         {/* AI Insights */}
                         <div className="bg-black/40 backdrop-blur-2xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-900/10 overflow-hidden shrink-0 max-h-[240px]">
-                            <div className="p-4 border-b border-purple-500/10 bg-gradient-to-br from-purple-900/20 to-transparent">
+                            <div className="p-4 border-b border-purple-500/10 bg-linear-to-br from-purple-900/20 to-transparent">
                                 <h2 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
                                     <BrainCircuit size={14} />
                                     Sentinel AI Insights
