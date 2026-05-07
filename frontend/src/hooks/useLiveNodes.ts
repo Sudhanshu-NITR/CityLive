@@ -1,53 +1,120 @@
 // src/hooks/useLiveNodes.ts
-import { useState, useEffect } from 'react';
-import { PulseNode } from '../types';
+"use client";
+import { useState, useEffect, useCallback } from "react";
+import { ApprovedNode, ValidationNode, SSEEvent } from "../types";
 
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:8080";
 
-export function useLiveNodes(initialNodes: PulseNode[] = []) {
-    const [nodes, setNodes] = useState<PulseNode[]>(initialNodes);
+interface LiveState {
+    approvedNodes: ApprovedNode[];
+    validationNodes: ValidationNode[];
+}
 
-    // Sync state if initialNodes arrive after mount
+/**
+ * useLiveNodes — connects to the SSE stream and maintains live state for
+ * both ApprovedNodes (user map red markers) and ValidationNodes (admin yellow markers).
+ *
+ * @param initialApproved  Pre-fetched ApprovedNodes from REST API
+ * @param initialValidation Pre-fetched ValidationNodes from REST API (admin only)
+ */
+export function useLiveNodes(
+    initialApproved: ApprovedNode[] = [],
+    initialValidation: ValidationNode[] = []
+): LiveState & {
+    upsertValidation: (node: ValidationNode) => void;
+    removeValidation: (id: string) => void;
+} {
+    const [approvedNodes, setApprovedNodes] = useState<ApprovedNode[]>(initialApproved);
+    const [validationNodes, setValidationNodes] = useState<ValidationNode[]>(initialValidation);
+
+    // Sync initial data when it arrives from parent
     useEffect(() => {
-        if (initialNodes.length > 0 && nodes.length === 0) {
-            setNodes(initialNodes);
-        }
-    }, [initialNodes, nodes.length]);
+        if (initialApproved.length > 0) setApprovedNodes(initialApproved);
+    }, [initialApproved]);
 
     useEffect(() => {
-        // Connect to the API Gateway SSE Stream
-        const eventSource = new EventSource(`${GATEWAY_URL}/stream`);
+        if (initialValidation.length > 0) setValidationNodes(initialValidation);
+    }, [initialValidation]);
 
-        eventSource.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
+    // ── SSE Connection ───────────────────────────────────────────────────
+    useEffect(() => {
+        let source: EventSource;
+        let retryTimeout: ReturnType<typeof setTimeout>;
 
-                if (data.type === 'NEW_PULSE_NODE' && data.payload) {
-                    const newNode = data.payload as PulseNode;
+        const connect = () => {
+            source = new EventSource(`${GATEWAY_URL}/stream`);
 
-                    setNodes((prevNodes) => {
-                        // Prevent duplicate nodes if they arrive twice
-                        if (prevNodes.some(n => n.id === newNode.id)) return prevNodes;
-                        // Add new node to the top of the list
-                        return [newNode, ...prevNodes];
-                    });
+            source.onmessage = (event) => {
+                try {
+                    const data: SSEEvent = JSON.parse(event.data);
+
+                    switch (data.type) {
+                        case "NEW_APPROVED_NODE":
+                            // A new red marker — add to approved list, remove from validation queue
+                            setApprovedNodes((prev) => {
+                                if (prev.some((n) => n.id === data.payload.id)) return prev;
+                                return [data.payload, ...prev];
+                            });
+                            setValidationNodes((prev) =>
+                                prev.filter((v) => v.id !== data.payload.validation_node_id)
+                            );
+                            break;
+
+                        case "VALIDATION_UPDATED":
+                            // New or updated yellow marker (AI created/updated a cluster)
+                            setValidationNodes((prev) => {
+                                const exists = prev.find((v) => v.id === data.payload.id);
+                                if (exists) {
+                                    return prev.map((v) =>
+                                        v.id === data.payload.id ? data.payload : v
+                                    );
+                                }
+                                return [data.payload, ...prev];
+                            });
+                            break;
+
+                        case "VALIDATION_REJECTED":
+                            // Admin rejected — remove from validation list
+                            setValidationNodes((prev) =>
+                                prev.filter((v) => v.id !== data.payload.id)
+                            );
+                            break;
+
+                        default:
+                            break;
+                    }
+                } catch (err) {
+                    console.error("[useLiveNodes] Failed to parse SSE data:", err);
                 }
-            } catch (err) {
-                console.error("Error parsing SSE data", err);
-            }
+            };
+
+            source.onerror = () => {
+                console.warn("[useLiveNodes] SSE disconnected. Reconnecting in 3s...");
+                source.close();
+                retryTimeout = setTimeout(connect, 3000); // Auto-reconnect
+            };
         };
 
-        eventSource.onerror = (error) => {
-            console.error("SSE Error:", error);
-            // Close connection on error. A robust app might add reconnection logic here.
-            eventSource.close();
-        };
+        connect();
 
-        // Cleanup connection when the component unmounts
         return () => {
-            eventSource.close();
+            source?.close();
+            clearTimeout(retryTimeout);
         };
     }, []);
 
-    return { nodes, setNodes };
+    // ── Manual state helpers (for optimistic admin UI updates) ───────────
+    const upsertValidation = useCallback((node: ValidationNode) => {
+        setValidationNodes((prev) => {
+            const exists = prev.find((v) => v.id === node.id);
+            if (exists) return prev.map((v) => (v.id === node.id ? node : v));
+            return [node, ...prev];
+        });
+    }, []);
+
+    const removeValidation = useCallback((id: string) => {
+        setValidationNodes((prev) => prev.filter((v) => v.id !== id));
+    }, []);
+
+    return { approvedNodes, validationNodes, upsertValidation, removeValidation };
 }
