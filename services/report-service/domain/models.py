@@ -11,6 +11,7 @@ class ReportRequest(BaseModel):
 # PulseNode can remain a dataclass or become a BaseModel
 class PulseNode(BaseModel):
     id: str
+    user_id: str
     type: str
     title: str
     description: str
@@ -18,4 +19,5 @@ class PulseNode(BaseModel):
     lng: float
     color: str
     bg: str
+    is_verified: bool = False
     time: str = "Just now"

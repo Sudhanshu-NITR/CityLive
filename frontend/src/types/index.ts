@@ -10,6 +10,9 @@ export interface PulseNode {
     color: string;
     bg: string;
     time: string;
+    is_verified: boolean;
+    severity?: number;
+    priority?: number;
 }
 
 export interface ReportRequest {

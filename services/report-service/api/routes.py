@@ -35,6 +35,14 @@ def submit_report(report_req: ReportRequest, service: ReportService = Depends(ge
 def get_verified_nodes(service: ReportService = Depends(get_report_service)):
     return service.get_all_reports()
 
+@router.get("/api/v1/pending_reports")
+def get_pending_reports(service: ReportService = Depends(get_report_service)):
+    return service.get_pending_reports()
+
+@router.post("/api/v1/verify/{node_id}")
+def verify_report(node_id: str, service: ReportService = Depends(get_report_service)):
+    return service.verify_report(node_id)
+
 @router.get("/api/v1/ai-insights")
 def get_ai_insights(service: ReportService = Depends(get_report_service)):
     insights, status_code = service.get_predictive_insights()
