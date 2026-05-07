@@ -1,9 +1,9 @@
 "use client";
 
 import { AlertTriangle, Car, MapPin, Clock } from "lucide-react";
-import { PulseNode } from "@/types";
+import { ApprovedNode } from "@/types";
 
-export default function PulseFeed({ nodes }: { nodes: PulseNode[] }) {
+export default function PulseFeed({ nodes }: { nodes: ApprovedNode[] }) {
     if (nodes.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-center p-6">
