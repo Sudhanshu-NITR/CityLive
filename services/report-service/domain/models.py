@@ -1,23 +1,14 @@
 # domain/models.py
 from pydantic import BaseModel
+from typing import Optional
 
 class ReportRequest(BaseModel):
     user_id: str = "anonymous"
     description: str
-    title: str = "Unknown"  
     lat: float
     lng: float
 
-# PulseNode can remain a dataclass or become a BaseModel
-class PulseNode(BaseModel):
-    id: str
-    user_id: str
-    type: str
-    title: str
-    description: str
-    lat: float
-    lng: float
-    color: str
-    bg: str
-    is_verified: bool = False
-    time: str = "Just now"
+class AdminActionRequest(BaseModel):
+    action: str  # "approve" or "reject"
+    admin_id: str
+    explanation: Optional[str] = ""

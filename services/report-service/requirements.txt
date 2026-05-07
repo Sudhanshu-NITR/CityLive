@@ -1,7 +1,7 @@
-google-cloud-firestore
 neo4j
-google-genai
-dotenv
+google-genai>=1.0.0
+python-dotenv
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
+requests
