@@ -1,173 +1,364 @@
 // src/app/admin/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import CityMap from "@/components/CityMap";
-import { PulseNode } from "@/types";
-import { ShieldAlert, Train, CheckCircle, BrainCircuit, Activity, ChevronRight, AlertTriangle } from "lucide-react";
+import { ValidationNode, ApprovedNode, ReportNode } from "@/types";
+import {
+    ShieldAlert, BrainCircuit, Activity, ChevronRight, AlertTriangle,
+    CheckCircle2, XCircle, Loader2, MapPin, Clock, Users, ChevronDown
+} from "lucide-react";
 import { apiClient } from "@/services/api";
 import { useLiveNodes } from "@/hooks/useLiveNodes";
+import { useUser } from "@/hooks/useUser";
 import UserSwitcher from "@/components/UserSwitcher";
 
 export default function AdminDashboard() {
-    const [initialNodes, setInitialNodes] = useState<PulseNode[]>([]);
-    const [insights, setInsights] = useState<{ title: string, description: string }[]>([]);
+    const router = useRouter();
+    const { user } = useUser();
+
+    // ── Role Guard — block non-admins ─────────────────────────────────────
+    useEffect(() => {
+        const saved = localStorage.getItem("citylive_current_user");
+        if (saved) {
+            try {
+                const u = JSON.parse(saved);
+                if (u.role !== "admin") {
+                    router.replace("/");
+                    return;
+                }
+            } catch (_) {
+                router.replace("/");
+            }
+        } else {
+            // No user at all — redirect
+            router.replace("/");
+        }
+    }, [router]);
+
+    // ── Data state ────────────────────────────────────────────────────────
+    const [initialValidation, setInitialValidation] = useState<ValidationNode[]>([]);
+    const [initialApproved, setInitialApproved] = useState<ApprovedNode[]>([]);
+    const [insights, setInsights] = useState<{ title: string; description: string }[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Selected card state
+    const [selectedNode, setSelectedNode] = useState<ValidationNode | null>(null);
+    const [linkedReports, setLinkedReports] = useState<ReportNode[]>([]);
+    const [hoveredReport, setHoveredReport] = useState<ReportNode | null>(null);
+    const [loadingReports, setLoadingReports] = useState(false);
+
+    // Action state
+    const [actionLoading, setActionLoading] = useState<string | null>(null); // validation_id
 
     useEffect(() => {
-        const fetchNodes = async () => {
+        const load = async () => {
             try {
-                const data = await apiClient.getNodes();
-                setInitialNodes(data || []);
+                const [validation, approved, aiInsights] = await Promise.all([
+                    apiClient.getValidationNodes(),
+                    apiClient.getApprovedNodes(),
+                    apiClient.getInsights().catch(() => []),
+                ]);
+                setInitialValidation(validation || []);
+                setInitialApproved(approved || []);
+                setInsights(aiInsights || []);
             } catch (err) {
-                console.error("Failed to fetch node data:", err);
+                console.error("Admin data load failed:", err);
+            } finally {
+                setLoading(false);
             }
         };
+        load();
 
-        const fetchInsights = async () => {
-            try {
-                const data = await apiClient.getInsights();
-                setInsights(data || []);
-            } catch (err) {
-                console.error("Failed to fetch insights:", err);
-            }
-        };
-
-        fetchNodes();
-        fetchInsights();
-
-        const intervalId = setInterval(() => {
-            fetchInsights();
-        }, 10000);
-
-        return () => clearInterval(intervalId);
+        // Refresh insights every 30s
+        const iv = setInterval(async () => {
+            const aiInsights = await apiClient.getInsights().catch(() => []);
+            setInsights(aiInsights);
+        }, 30000);
+        return () => clearInterval(iv);
     }, []);
 
-    const { nodes } = useLiveNodes(initialNodes);
+    const { approvedNodes, validationNodes, removeValidation } = useLiveNodes(
+        initialApproved,
+        initialValidation
+    );
+
+    // ── Select a ValidationNode — fetch its linked reports ────────────────
+    const selectNode = useCallback(async (node: ValidationNode) => {
+        setSelectedNode(node);
+        setHoveredReport(null);
+        setLoadingReports(true);
+        try {
+            const reports = await apiClient.getReportsForValidation(node.id);
+            setLinkedReports(reports);
+        } catch (err) {
+            console.error("Failed to fetch linked reports:", err);
+            setLinkedReports([]);
+        } finally {
+            setLoadingReports(false);
+        }
+    }, []);
+
+    // ── Admin: Approve ────────────────────────────────────────────────────
+    const handleApprove = async (node: ValidationNode) => {
+        if (!user) return;
+        setActionLoading(node.id);
+        try {
+            await apiClient.approveValidation(node.id, user.id, "Reviewed and confirmed by admin.");
+            removeValidation(node.id);
+            if (selectedNode?.id === node.id) setSelectedNode(null);
+        } catch (err: any) {
+            alert(`Approval failed: ${err.message}`);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    // ── Admin: Reject ─────────────────────────────────────────────────────
+    const handleReject = async (node: ValidationNode) => {
+        if (!user) return;
+        setActionLoading(node.id);
+        try {
+            await apiClient.rejectValidation(node.id, user.id);
+            removeValidation(node.id);
+            if (selectedNode?.id === node.id) setSelectedNode(null);
+        } catch (err: any) {
+            alert(`Rejection failed: ${err.message}`);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const severityColor = (s: number) =>
+        s >= 8 ? "text-red-400 bg-red-500/10 border-red-500/20"
+        : s >= 5 ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
+        : "text-green-400 bg-green-500/10 border-green-500/20";
 
     return (
         <main className="relative w-full h-screen overflow-hidden bg-black text-white">
-            {/* Background Map Layer */}
+            {/* Background Map — shows both ValidationNodes (yellow) and ApprovedNodes (red) */}
             <div className="absolute inset-0 z-0">
-                <CityMap nodes={nodes} />
-                {/* Dual-sided gradient to ensure both sidebars are readable */}
-                <div className="absolute inset-0 bg-linear-to-r from-black/80 via-transparent to-black/80 pointer-events-none" />
+                <CityMap
+                    approvedNodes={approvedNodes}
+                    validationNodes={validationNodes}
+                    hoveredReport={hoveredReport}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80 pointer-events-none" />
             </div>
 
             {/* Foreground UI */}
-            <div className="relative z-10 flex flex-col h-full p-6 pointer-events-none gap-6">
+            <div className="relative z-10 flex flex-col h-full p-5 pointer-events-none gap-4">
 
-                {/* Top Navigation Bar */}
-                <header className="relative z-50 flex items-center bg-black/40 border border-white/10 p-5 rounded-2xl backdrop-blur-2xl shadow-2xl pointer-events-auto">
-                    {/* Left: Logo & Branding */}
+                {/* Top Nav */}
+                <header className="flex items-center bg-black/40 border border-white/10 px-5 py-4 rounded-2xl backdrop-blur-2xl shadow-2xl pointer-events-auto">
                     <div className="flex items-center gap-3 w-1/4">
                         <div className="p-2 bg-blue-500/20 rounded-xl border border-blue-500/30">
-                            <Activity className="text-blue-400 w-6 h-6 animate-pulse" />
+                            <Activity className="text-blue-400 w-5 h-5 animate-pulse" />
                         </div>
-                        <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                            <span>City<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300">Live</span></span>
-                            <span className="font-light text-gray-500 text-lg">|</span>
-                            <span className="font-medium text-gray-300 text-lg whitespace-nowrap">Command Center</span>
+                        <h1 className="text-xl font-bold text-white">
+                            City<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Live</span>
+                            <span className="text-gray-500 font-light ml-2 text-base">| Command Center</span>
                         </h1>
                     </div>
-
-                    {/* Center: Navigation Buttons */}
-                    <div className="flex-1 flex justify-center">
-                        <nav className="flex gap-8 text-sm font-semibold text-gray-400">
-                            <a href="#" className="text-white hover:text-cyan-400 transition-colors">Live Map</a>
-                            <a href="#" className="hover:text-cyan-400 transition-colors">Reports</a>
-                            <a href="#" className="hover:text-cyan-400 transition-colors">Analytics</a>
-                            <a href="#" className="hover:text-cyan-400 transition-colors">AI Insights</a>
-                        </nav>
+                    <div className="flex-1 flex justify-center gap-8 text-sm font-semibold text-gray-400">
+                        <a href="#" className="text-white">Live Map</a>
+                        <a href="#" className="hover:text-cyan-400 transition-colors">Analytics</a>
+                        <a href="#" className="hover:text-cyan-400 transition-colors">AI Insights</a>
                     </div>
-
-                    {/* Right: Persona Switcher */}
                     <div className="w-1/4 flex justify-end">
                         <UserSwitcher />
                     </div>
                 </header>
 
-                <div className="flex-1 flex justify-between gap-6 overflow-hidden">
+                {/* Main Columns */}
+                <div className="flex-1 flex gap-5 overflow-hidden">
 
-                    {/* Left Column: Stats & Pending */}
-                    <div className="w-[420px] flex flex-col gap-6 pointer-events-auto h-full overflow-y-auto pb-4 scrollbar-hide">
+                    {/* ── LEFT: Validation Queue ─────────────────────────────────────── */}
+                    <div className="w-[380px] flex flex-col gap-4 pointer-events-auto h-full overflow-hidden">
 
-                        {/* Metrics Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <StatCard icon={<ShieldAlert className="text-red-400" />} count="5" label="Active Alert Zones" />
-                            <StatCard icon={<Train className="text-amber-400" />} count="3" label="Metro Disruptions" />
-                            <StatCard icon={<CheckCircle className="text-green-400" />} count={nodes.length.toString()} label="Reports Verified" />
-                            <StatCard icon={<BrainCircuit className="text-purple-400" />} count="16" label="AI Predictions" />
+                        {/* Stats row */}
+                        <div className="grid grid-cols-2 gap-3 shrink-0">
+                            <StatCard
+                                icon={<AlertTriangle size={18} className="text-amber-400" />}
+                                count={validationNodes.length}
+                                label="Pending Review"
+                                color="amber"
+                            />
+                            <StatCard
+                                icon={<ShieldAlert size={18} className="text-red-400" />}
+                                count={approvedNodes.length}
+                                label="Live Hazards"
+                                color="red"
+                            />
                         </div>
 
-                        {/* Pending Reports */}
-                        <div className="flex-1 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden min-h-[300px]">
-                            <div className="p-5 border-b border-white/5 bg-linear-to-b from-white/5 to-transparent">
-                                <h2 className="text-sm font-bold text-gray-300 tracking-wider uppercase">Pending Review (21)</h2>
+                        {/* ValidationNode List */}
+                        <div className="flex-1 flex flex-col bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+                            <div className="p-4 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent shrink-0">
+                                <h2 className="text-sm font-bold text-amber-400 flex items-center gap-2">
+                                    <BrainCircuit size={16} />
+                                    AI Validation Queue
+                                </h2>
+                                <p className="text-[11px] text-gray-500 mt-0.5">Sorted by severity + priority</p>
                             </div>
-                            <div className="flex flex-col gap-3 overflow-y-auto p-4">
-                                <PendingReportCard title="Fire hazard at Brigade Rd" time="2m ago" />
-                                <PendingReportCard title="Severe waterlogging" time="12m ago" />
-                                <PendingReportCard title="Accident blocking lane" time="15m ago" />
+
+                            <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-hide">
+                                {loading ? (
+                                    <div className="flex items-center justify-center h-full gap-2 text-gray-500">
+                                        <Loader2 size={18} className="animate-spin text-amber-500" />
+                                        <span className="text-xs">Loading queue...</span>
+                                    </div>
+                                ) : validationNodes.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-center gap-3">
+                                        <CheckCircle2 size={32} className="text-green-500/40" />
+                                        <p className="text-gray-400 text-sm font-medium">Queue Clear</p>
+                                        <p className="text-gray-600 text-xs">No pending validation nodes.</p>
+                                    </div>
+                                ) : (
+                                    validationNodes.map((node) => (
+                                        <ValidationCard
+                                            key={node.id}
+                                            node={node}
+                                            isSelected={selectedNode?.id === node.id}
+                                            isActioning={actionLoading === node.id}
+                                            onSelect={() => selectNode(node)}
+                                            onApprove={() => handleApprove(node)}
+                                            onReject={() => handleReject(node)}
+                                            severityColor={severityColor}
+                                        />
+                                    ))
+                                )}
                             </div>
-                            <button className="mt-auto w-full py-4 bg-white/5 hover:bg-white/10 text-sm transition font-medium border-t border-white/5 text-gray-300">
-                                View All Reports
-                            </button>
                         </div>
                     </div>
 
-                    {/* Right Column: AI Insights & Actions */}
-                    <div className="w-[420px] flex flex-col gap-6 pointer-events-auto h-full overflow-y-auto pb-4 scrollbar-hide">
+                    {/* ── RIGHT: Report Detail + AI Insights ────────────────────────── */}
+                    <div className="w-[380px] flex flex-col gap-4 pointer-events-auto h-full overflow-hidden">
 
-                        {/* Sentinel AI Panel */}
-                        <div className="bg-black/40 backdrop-blur-2xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-900/20 flex-1 overflow-hidden flex flex-col">
-                            <div className="p-5 border-b border-purple-500/10 bg-linear-to-br from-purple-900/30 to-transparent">
-                                <h2 className="text-sm font-bold text-purple-400 tracking-wider uppercase flex items-center gap-2">
-                                    <BrainCircuit size={18} />
+                        {/* Selected ValidationNode detail */}
+                        {selectedNode ? (
+                            <div className="flex-1 flex flex-col bg-black/40 backdrop-blur-2xl border border-amber-500/20 rounded-2xl shadow-2xl overflow-hidden">
+                                <div className="p-4 border-b border-amber-500/10 bg-gradient-to-br from-amber-900/20 to-transparent shrink-0">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
+                                                {selectedNode.hazard_type}
+                                            </span>
+                                            <h3 className="text-sm font-bold text-white mt-1.5 leading-snug">{selectedNode.title}</h3>
+                                        </div>
+                                        <button onClick={() => setSelectedNode(null)} className="text-gray-500 hover:text-white transition p-1">
+                                            <XCircle size={16} />
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-2 leading-relaxed">{selectedNode.ai_explanation}</p>
+                                    <div className="flex gap-2 mt-3">
+                                        <span className={`text-[10px] px-2 py-0.5 rounded border font-bold ${severityColor(selectedNode.severity)}`}>SEV {selectedNode.severity}/10</span>
+                                        <span className="text-[10px] px-2 py-0.5 rounded border font-bold text-blue-400 bg-blue-500/10 border-blue-500/20">PRI {selectedNode.priority}/10</span>
+                                        <span className="text-[10px] px-2 py-0.5 rounded border font-bold text-gray-400 bg-white/5 border-white/10 flex items-center gap-1">
+                                            <Users size={9} /> {selectedNode.report_count}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Linked Reports */}
+                                <div className="flex-1 overflow-y-auto scrollbar-hide">
+                                    <div className="px-4 py-3 border-b border-white/5">
+                                        <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                                            Linked Reports ({linkedReports.length})
+                                        </h4>
+                                    </div>
+                                    {loadingReports ? (
+                                        <div className="flex items-center justify-center p-8 gap-2 text-gray-500">
+                                            <Loader2 size={16} className="animate-spin" />
+                                            <span className="text-xs">Loading reports...</span>
+                                        </div>
+                                    ) : (
+                                        <div className="p-3 space-y-2">
+                                            {linkedReports.map((report) => (
+                                                <div
+                                                    key={report.id}
+                                                    className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-green-500/5 hover:border-green-500/20 transition cursor-pointer group"
+                                                    onMouseEnter={() => setHoveredReport(report)}
+                                                    onMouseLeave={() => setHoveredReport(null)}
+                                                >
+                                                    <div className="flex items-start gap-2">
+                                                        <MapPin size={12} className="text-green-400 mt-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs text-gray-300 leading-snug">{report.description}</p>
+                                                            <div className="flex items-center gap-2 mt-1.5">
+                                                                <span className="text-[10px] text-gray-500">by {report.user_id}</span>
+                                                                <span className="text-[10px] text-gray-600 flex items-center gap-0.5">
+                                                                    <Clock size={8} />
+                                                                    {report.timestamp
+                                                                        ? new Date(report.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                                                                        : "—"}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Approve / Reject */}
+                                <div className="p-4 border-t border-white/5 flex gap-3 shrink-0">
+                                    <button
+                                        onClick={() => handleReject(selectedNode)}
+                                        disabled={!!actionLoading}
+                                        className="flex-1 py-2.5 rounded-xl bg-red-600/10 hover:bg-red-600/20 border border-red-500/30 text-red-400 text-sm font-semibold transition disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                    >
+                                        {actionLoading === selectedNode.id ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                                        Reject
+                                    </button>
+                                    <button
+                                        onClick={() => handleApprove(selectedNode)}
+                                        disabled={!!actionLoading}
+                                        className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white text-sm font-semibold shadow-[0_0_16px_rgba(34,197,94,0.25)] transition disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                    >
+                                        {actionLoading === selectedNode.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                                        Approve
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            /* Placeholder when nothing selected */
+                            <div className="flex-1 flex flex-col items-center justify-center bg-black/20 border border-dashed border-white/10 rounded-2xl gap-3 text-center p-6">
+                                <ChevronRight size={28} className="text-gray-600" />
+                                <p className="text-sm text-gray-500 font-medium">Select a validation node</p>
+                                <p className="text-xs text-gray-600">Click any item in the queue to review linked reports and take action.</p>
+                            </div>
+                        )}
+
+                        {/* AI Insights */}
+                        <div className="bg-black/40 backdrop-blur-2xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-900/10 overflow-hidden shrink-0 max-h-[240px]">
+                            <div className="p-4 border-b border-purple-500/10 bg-gradient-to-br from-purple-900/20 to-transparent">
+                                <h2 className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                                    <BrainCircuit size={14} />
                                     Sentinel AI Insights
                                 </h2>
                             </div>
-                            <div className="p-5 space-y-4 overflow-y-auto">
+                            <div className="p-3 space-y-2 overflow-y-auto max-h-[160px] scrollbar-hide">
                                 {insights.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-10 gap-3">
-                                        <BrainCircuit size={32} className="text-purple-500/50 animate-pulse" />
-                                        <div className="text-xs text-purple-400 font-medium uppercase tracking-widest">Running Analysis...</div>
+                                    <div className="flex items-center gap-2 justify-center py-4">
+                                        <BrainCircuit size={16} className="text-purple-500/40 animate-pulse" />
+                                        <span className="text-xs text-gray-500">Analyzing city data...</span>
                                     </div>
                                 ) : (
-                                    insights.map((insight, idx) => (
-                                        <div key={idx} className="bg-white/5 hover:bg-white/10 transition p-4 rounded-xl border border-white/5 group cursor-pointer">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <AlertTriangle size={16} className="text-amber-500" />
-                                                <span className="font-semibold text-sm text-gray-200 group-hover:text-white transition">{insight.title}</span>
+                                    insights.map((ins, i) => (
+                                        <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-purple-500/5 transition cursor-pointer">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <AlertTriangle size={12} className="text-amber-500 shrink-0" />
+                                                <span className="text-xs font-semibold text-gray-200">{ins.title}</span>
                                             </div>
-                                            <p className="text-xs text-gray-400 leading-relaxed">
-                                                {insight.description}
-                                            </p>
-                                            <div className="text-xs text-purple-400 mt-3 font-semibold flex items-center hover:text-purple-300">
-                                                Expand Analysis <ChevronRight size={14} className="ml-1" />
-                                            </div>
+                                            <p className="text-[11px] text-gray-400 leading-relaxed pl-5">{ins.description}</p>
                                         </div>
                                     ))
                                 )}
                             </div>
                         </div>
-
-                        {/* Action Center */}
-                        <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl">
-                            <div className="p-5 border-b border-white/5 bg-linear-to-b from-white/5 to-transparent">
-                                <h2 className="text-sm font-bold text-gray-300 tracking-wider uppercase">Emergency Actions</h2>
-                            </div>
-                            <div className="p-5 flex flex-col gap-3">
-                                <button className="w-full py-3.5 bg-red-600/10 hover:bg-red-600/20 border border-red-500/30 text-red-400 rounded-xl text-sm font-semibold transition flex justify-center items-center gap-2">
-                                    <ShieldAlert size={16} />
-                                    Issue City-Wide Alert
-                                </button>
-                                <button className="w-full py-3.5 bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl text-sm font-semibold shadow-[0_0_20px_rgba(37,99,235,0.3)] transition flex justify-center items-center gap-2">
-                                    <Activity size={16} />
-                                    Notify Response Teams
-                                </button>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>
@@ -175,27 +366,79 @@ export default function AdminDashboard() {
     );
 }
 
-// --- Helper Components ---
+// ── Sub-components ────────────────────────────────────────────────────────────
 
-function StatCard({ icon, count, label }: { icon: React.ReactNode, count: string, label: string }) {
+function StatCard({ icon, count, label, color }: {
+    icon: React.ReactNode; count: number; label: string; color: "amber" | "red";
+}) {
+    const colors = {
+        amber: "border-amber-500/20 shadow-amber-900/10",
+        red:   "border-red-500/20 shadow-red-900/10",
+    };
     return (
-        <div className="bg-black/40 border border-white/10 rounded-xl p-5 backdrop-blur-md flex flex-col justify-center shadow-lg hover:bg-white/5 transition cursor-pointer">
-            <div className="mb-3">{icon}</div>
+        <div className={`bg-black/40 border ${colors[color]} rounded-xl p-4 backdrop-blur-md shadow-lg`}>
+            <div className="mb-2">{icon}</div>
             <div className="text-2xl font-bold text-white">{count}</div>
-            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">{label}</div>
+            <div className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mt-0.5">{label}</div>
         </div>
     );
 }
 
-function PendingReportCard({ title, time }: { title: string, time: string }) {
+function ValidationCard({ node, isSelected, isActioning, onSelect, onApprove, onReject, severityColor }: {
+    node: ValidationNode;
+    isSelected: boolean;
+    isActioning: boolean;
+    onSelect: () => void;
+    onApprove: () => void;
+    onReject: () => void;
+    severityColor: (s: number) => string;
+}) {
     return (
-        <div className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition cursor-pointer flex justify-between items-center group">
-            <div>
-                <h4 className="text-sm font-medium text-gray-200 group-hover:text-white transition">{title}</h4>
-                <span className="text-xs text-gray-500 mt-0.5 block">{time}</span>
-            </div>
-            <div className="w-6 h-6 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                <ChevronRight size={14} className="text-gray-400 group-hover:text-white transition" />
+        <div
+            className={`rounded-xl border transition-all cursor-pointer ${
+                isSelected
+                    ? "bg-amber-500/10 border-amber-500/40 shadow-lg shadow-amber-900/20"
+                    : "bg-white/5 border-white/5 hover:bg-white/8 hover:border-white/10"
+            }`}
+            onClick={onSelect}
+        >
+            <div className="p-3">
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded shrink-0">
+                        {node.hazard_type}
+                    </span>
+                    <div className="flex gap-1.5 shrink-0">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border font-bold ${severityColor(node.severity)}`}>
+                            S{node.severity}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded border font-bold text-blue-400 bg-blue-500/10 border-blue-500/20">
+                            P{node.priority}
+                        </span>
+                    </div>
+                </div>
+                <p className="text-xs font-semibold text-gray-200 leading-snug">{node.title}</p>
+                <p className="text-[11px] text-gray-500 mt-1 line-clamp-2 leading-snug">{node.ai_explanation}</p>
+                <div className="flex items-center justify-between mt-2">
+                    <span className="text-[10px] text-gray-600 flex items-center gap-1">
+                        <Users size={9} /> {node.report_count} report{node.report_count !== 1 ? "s" : ""}
+                    </span>
+                    <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            onClick={onReject}
+                            disabled={isActioning}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition disabled:opacity-50"
+                        >
+                            {isActioning ? <Loader2 size={10} className="animate-spin" /> : "Reject"}
+                        </button>
+                        <button
+                            onClick={onApprove}
+                            disabled={isActioning}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 transition disabled:opacity-50"
+                        >
+                            {isActioning ? <Loader2 size={10} className="animate-spin" /> : "Approve"}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
