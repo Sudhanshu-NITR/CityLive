@@ -123,8 +123,8 @@ export default function ReportModal({ onClose }: ReportModalProps) {
                                 {locating
                                     ? "Detecting location..."
                                     : coords
-                                    ? locationLabel
-                                    : "Tap to detect my location"}
+                                        ? locationLabel
+                                        : "Tap to detect my location"}
                             </button>
                         </div>
 

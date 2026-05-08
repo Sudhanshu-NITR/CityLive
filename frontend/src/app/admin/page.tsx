@@ -132,8 +132,8 @@ export default function AdminDashboard() {
 
     const severityColor = (s: number) =>
         s >= 8 ? "text-red-400 bg-red-500/10 border-red-500/20"
-        : s >= 5 ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
-        : "text-green-400 bg-green-500/10 border-green-500/20";
+            : s >= 5 ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                : "text-green-400 bg-green-500/10 border-green-500/20";
 
     return (
         <main className="relative w-full h-screen overflow-hidden bg-black text-white">
@@ -373,7 +373,7 @@ function StatCard({ icon, count, label, color }: {
 }) {
     const colors = {
         amber: "border-amber-500/20 shadow-amber-900/10",
-        red:   "border-red-500/20 shadow-red-900/10",
+        red: "border-red-500/20 shadow-red-900/10",
     };
     return (
         <div className={`bg-black/40 border ${colors[color]} rounded-xl p-4 backdrop-blur-md shadow-lg`}>
@@ -395,11 +395,10 @@ function ValidationCard({ node, isSelected, isActioning, onSelect, onApprove, on
 }) {
     return (
         <div
-            className={`rounded-xl border transition-all cursor-pointer ${
-                isSelected
+            className={`rounded-xl border transition-all cursor-pointer ${isSelected
                     ? "bg-amber-500/10 border-amber-500/40 shadow-lg shadow-amber-900/20"
                     : "bg-white/5 border-white/5 hover:bg-white/8 hover:border-white/10"
-            }`}
+                }`}
             onClick={onSelect}
         >
             <div className="p-3">

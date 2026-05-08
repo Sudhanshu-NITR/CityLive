@@ -63,6 +63,6 @@ export type ReportRequest = {
 
 // ── SSE event envelope ─────────────────────────────────────────────────────
 export type SSEEvent =
-    | { type: "NEW_APPROVED_NODE";    payload: ApprovedNode }
-    | { type: "VALIDATION_UPDATED";   payload: ValidationNode }
-    | { type: "VALIDATION_REJECTED";  payload: { id: string } };
+    | { type: "NEW_APPROVED_NODE"; payload: ApprovedNode }
+    | { type: "VALIDATION_UPDATED"; payload: ValidationNode }
+    | { type: "VALIDATION_REJECTED"; payload: { id: string } };

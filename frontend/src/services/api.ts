@@ -16,7 +16,7 @@ function authHeaders(): HeadersInit {
                 "X-User-Role": user.role,
             };
         }
-    } catch (_) {}
+    } catch (_) { }
     return { "Content-Type": "application/json" };
 }
 
