@@ -93,12 +93,22 @@ export default function ReportModal({ onClose }: ReportModalProps) {
                             </p>
                             <p className="text-gray-400 text-sm mt-1">{result.message}</p>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-sm font-semibold text-white transition mt-2"
-                        >
-                            Close
-                        </button>
+                        <div className="flex gap-3 mt-2">
+                            {(!isSuccess && !isDiscarded) && (
+                                <button
+                                    onClick={() => setResult(null)}
+                                    className="px-6 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-semibold transition border border-red-500/20"
+                                >
+                                    Retry
+                                </button>
+                            )}
+                            <button
+                                onClick={onClose}
+                                className="px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-sm font-semibold text-white transition"
+                            >
+                                Close
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     /* Form */
@@ -126,6 +136,34 @@ export default function ReportModal({ onClose }: ReportModalProps) {
                                         ? locationLabel
                                         : "Tap to detect my location"}
                             </button>
+
+                            {/* Manual Override for Testing */}
+                            <div className="flex gap-2 mt-2">
+                                <input
+                                    type="number"
+                                    step="any"
+                                    placeholder="Latitude (e.g. 12.9716)"
+                                    value={coords?.lat || ""}
+                                    onChange={(e) => {
+                                        const val = e.target.value ? parseFloat(e.target.value) : 0;
+                                        setCoords({ lat: val, lng: coords?.lng || 0 });
+                                        setLocationLabel(`Manual: ${val}, ${coords?.lng || 0}`);
+                                    }}
+                                    className="w-1/2 bg-white/5 border border-white/10 rounded-lg py-3 px-3 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50"
+                                />
+                                <input
+                                    type="number"
+                                    step="any"
+                                    placeholder="Longitude (e.g. 77.5946)"
+                                    value={coords?.lng || ""}
+                                    onChange={(e) => {
+                                        const val = e.target.value ? parseFloat(e.target.value) : 0;
+                                        setCoords({ lat: coords?.lat || 0, lng: val });
+                                        setLocationLabel(`Manual: ${coords?.lat || 0}, ${val}`);
+                                    }}
+                                    className="w-1/2 bg-white/5 border border-white/10 rounded-lg py-3 px-3 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50"
+                                />
+                            </div>
                         </div>
 
                         {/* Description */}

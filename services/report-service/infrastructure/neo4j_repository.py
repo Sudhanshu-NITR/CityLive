@@ -1,7 +1,18 @@
 # infrastructure/neo4j_repository.py
 import uuid
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from infrastructure.database import db
+
+
+def serialize_neo4j(data: Any) -> Any:
+    """Recursively converts Neo4j DateTime objects to ISO strings for JSON serialization."""
+    if isinstance(data, dict):
+        return {k: serialize_neo4j(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [serialize_neo4j(v) for v in data]
+    if "neo4j.time" in str(type(data)):
+        return str(data)
+    return data
 
 
 class Neo4jRepository:
@@ -36,7 +47,7 @@ class Neo4jRepository:
                 query, id=report_id, user_id=user_id,
                 description=description, lat=lat, lng=lng
             )
-            return dict(result.single()["report"])
+            return serialize_neo4j(dict(result.single()["report"]))
 
     def check_recent_user_report(self, user_id: str, lat: float, lng: float) -> bool:
         """Returns True if user submitted a report within 500 m in the last hour (anti-spam)."""
@@ -45,7 +56,7 @@ class Neo4jRepository:
         WITH r,
              point({latitude: r.lat, longitude: r.lng}) AS p1,
              point({latitude: $lat, longitude: $lng})   AS p2
-        WHERE distance(p1, p2) < 500
+        WHERE point.distance(p1, p2) < 500
           AND r.timestamp > datetime() - duration({hours: 1})
         RETURN count(r) AS cnt
         """
@@ -84,9 +95,9 @@ class Neo4jRepository:
              labels(n)[0]                               AS node_type,
              point({latitude: n.lat, longitude: n.lng}) AS p1,
              point({latitude: $lat, longitude: $lng})   AS p2
-        WHERE distance(p1, p2) < ($radius_km * 1000)
+        WHERE point.distance(p1, p2) < ($radius_km * 1000)
         RETURN node_type, n { .* } AS data
-        ORDER BY distance(p1, p2)
+        ORDER BY point.distance(p1, p2)
         LIMIT 25
         """
         context = {"approved_nodes": [], "validation_nodes": [], "report_nodes": []}
@@ -101,7 +112,7 @@ class Neo4jRepository:
                     context["validation_nodes"].append(data)
                 else:
                     context["report_nodes"].append(data)
-        return context
+        return serialize_neo4j(context)
 
     # ─────────────────────────────────────────────
     # ValidationNode (AI Tools)
@@ -144,7 +155,7 @@ class Neo4jRepository:
                 title=title, ai_explanation=ai_explanation,
                 severity=severity, priority=priority
             )
-            return dict(result.single()["validation"])
+            return serialize_neo4j(dict(result.single()["validation"]))
 
     def update_validation_node(
         self, validation_id: str, report_id: str,
@@ -174,7 +185,7 @@ class Neo4jRepository:
                 explanation=updated_explanation
             )
             record = result.single()
-            return dict(record["validation"]) if record else {}
+            return serialize_neo4j(dict(record["validation"])) if record else {}
 
     def get_all_validation_nodes(self) -> List[Dict]:
         """
@@ -191,7 +202,7 @@ class Neo4jRepository:
         """
         with self.driver.session() as session:
             result = session.run(query)
-            return [dict(r["validation"]) for r in result]
+            return serialize_neo4j([dict(r["validation"]) for r in result])
 
     def get_reports_for_validation(self, validation_id: str) -> List[Dict]:
         """Returns all ReportNodes linked to a given ValidationNode."""
@@ -202,7 +213,7 @@ class Neo4jRepository:
         """
         with self.driver.session() as session:
             result = session.run(query, id=validation_id)
-            return [dict(r["report"]) for r in result]
+            return serialize_neo4j([dict(r["report"]) for r in result])
 
     # ─────────────────────────────────────────────
     # ApprovedNode (Admin + AI Tools)
@@ -246,7 +257,7 @@ class Neo4jRepository:
                 ai_notes=ai_post_approval_notes
             )
             record = result.single()
-            return dict(record["approved"]) if record else None
+            return serialize_neo4j(dict(record["approved"])) if record else None
 
     def reject_validation_node(self, validation_id: str, admin_id: str) -> bool:
         """Marks a ValidationNode as rejected and its linked reports as discarded."""
@@ -273,7 +284,7 @@ class Neo4jRepository:
         """
         with self.driver.session() as session:
             result = session.run(query)
-            return [dict(r["approved"]) for r in result]
+            return serialize_neo4j([dict(r["approved"]) for r in result])
 
     def get_context_nodes(self) -> List[Dict]:
         """Returns active ApprovedNodes for AI insight generation."""

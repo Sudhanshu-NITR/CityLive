@@ -234,7 +234,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* ── RIGHT: Report Detail + AI Insights ────────────────────────── */}
-                    <div className="w-[380px] flex flex-col gap-4 pointer-events-auto h-full overflow-hidden">
+                    <div className="w-[380px] flex flex-col gap-4 pointer-events-auto h-full overflow-hidden ">
 
                         {/* Selected ValidationNode detail */}
                         {selectedNode ? (
@@ -325,10 +325,10 @@ export default function AdminDashboard() {
                             </div>
                         ) : (
                             /* Placeholder when nothing selected */
-                            <div className="flex-1 flex flex-col items-center justify-center bg-black/20 border border-dashed border-white/10 rounded-2xl gap-3 text-center p-6">
-                                <ChevronRight size={28} className="text-gray-600" />
-                                <p className="text-sm text-gray-500 font-medium">Select a validation node</p>
-                                <p className="text-xs text-gray-600">Click any item in the queue to review linked reports and take action.</p>
+                            <div className="flex-1 flex flex-col items-center justify-center bg-black/40 border border-dashed border-white/10 rounded-2xl gap-3 text-center p-6">
+                                <ChevronRight size={28} className="text-gray-300" />
+                                <p className="text-sm text-gray-200 font-medium">Select a validation node</p>
+                                <p className="text-xs text-gray-300">Click any item in the queue to review linked reports and take action.</p>
                             </div>
                         )}
 
@@ -395,9 +395,9 @@ function ValidationCard({ node, isSelected, isActioning, onSelect, onApprove, on
 }) {
     return (
         <div
-            className={`rounded-xl border transition-all cursor-pointer ${isSelected
-                    ? "bg-amber-500/10 border-amber-500/40 shadow-lg shadow-amber-900/20"
-                    : "bg-white/5 border-white/5 hover:bg-white/8 hover:border-white/10"
+            className={`group rounded-xl border transition-all cursor-pointer ${isSelected
+                ? "bg-amber-500/10 border-amber-500/40 shadow-lg shadow-amber-900/20"
+                : "bg-white/5 border-white/5 hover:bg-white/8 hover:border-white/10"
                 }`}
             onClick={onSelect}
         >
@@ -416,7 +416,7 @@ function ValidationCard({ node, isSelected, isActioning, onSelect, onApprove, on
                     </div>
                 </div>
                 <p className="text-xs font-semibold text-gray-200 leading-snug">{node.title}</p>
-                <p className="text-[11px] text-gray-500 mt-1 line-clamp-2 leading-snug">{node.ai_explanation}</p>
+                <p className="text-[11px] text-gray-500 mt-1 line-clamp-2 group-hover:line-clamp-none leading-snug transition-all">{node.ai_explanation}</p>
                 <div className="flex items-center justify-between mt-2">
                     <span className="text-[10px] text-gray-600 flex items-center gap-1">
                         <Users size={9} /> {node.report_count} report{node.report_count !== 1 ? "s" : ""}

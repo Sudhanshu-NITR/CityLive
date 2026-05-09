@@ -136,7 +136,7 @@ export default function Home() {
                                                 {node.title}
                                             </h3>
                                             {node.ai_post_approval_notes && (
-                                                <p className="text-gray-400 text-xs mt-1 line-clamp-2 leading-relaxed">
+                                                <p className="text-gray-400 text-xs mt-1 line-clamp-2 group-hover:line-clamp-none leading-relaxed transition-all">
                                                     {node.ai_post_approval_notes}
                                                 </p>
                                             )}

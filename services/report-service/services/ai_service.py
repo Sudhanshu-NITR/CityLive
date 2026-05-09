@@ -126,12 +126,12 @@ STEP 2 — CHECK FOR ACTIVE APPROVED NODES
 
 STEP 3 — CHECK FOR EXISTING VALIDATION NODES
   Examine the validation_nodes in the context.
-  If a ValidationNode with the SAME hazard type exists (status = pending_admin_review):
+  If a ValidationNode exists that is EITHER the same hazard type OR logically caused by/related to this new report (e.g., a traffic jam caused by nearby flooding):
     → Call update_validation_node() with:
         - The ValidationNode's id
         - Recalculated severity (factor in corroboration — same hazard reported again = +1 severity, max 10)
         - Recalculated priority (each additional report adds urgency — add 1, max 10)
-        - A fresh ai_explanation that incorporates ALL linked reports + this new one
+        - A fresh ai_explanation that incorporates ALL linked reports, explicitly noting the relationship (e.g., "Flooding has now caused a severe traffic jam in the area").
     → After the tool returns, return:
       {{"action": "updated_validation", "validation_id": "<id>", "severity": N, "priority": N}}
 
