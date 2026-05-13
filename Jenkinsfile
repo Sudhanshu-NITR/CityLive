@@ -28,7 +28,7 @@ pipeline {
                             --volumes-from jenkins \
                             -w ${WORKSPACE}/services/report-service \
                             python:3.11-slim \
-                            sh -c "pip install -r requirements.txt -q && pytest tests/ -v"
+                            sh -c "pip install -r requirements.txt -q && python -m pytest tests/ -v"
                         '''
                     }
                 }
@@ -51,7 +51,7 @@ pipeline {
                             docker run --rm \
                             --volumes-from jenkins \
                             -w ${WORKSPACE}/services/event-service \
-                            golang:1.22-alpine \
+                            golang:1.23-alpine \
                             go test ./...
                         '''
                     }
@@ -63,7 +63,7 @@ pipeline {
                             docker run --rm \
                             --volumes-from jenkins \
                             -w ${WORKSPACE}/services/api-gateway \
-                            golang:1.22-alpine \
+                            golang:1.23-alpine \
                             go test ./...
                         '''
                     }

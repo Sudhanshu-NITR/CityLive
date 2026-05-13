@@ -29,7 +29,7 @@ export default function UserSwitcher() {
             }
         };
         loadUsers();
-    }, []);
+    }, [switchUser]);
 
     // Close dropdown on click outside
     useEffect(() => {

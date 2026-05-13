@@ -7,7 +7,7 @@ import CityMap from "@/components/CityMap";
 import { ValidationNode, ApprovedNode, ReportNode } from "@/types";
 import {
     ShieldAlert, BrainCircuit, Activity, ChevronRight, AlertTriangle,
-    CheckCircle2, XCircle, Loader2, MapPin, Clock, Users, ChevronDown
+    CheckCircle2, XCircle, Loader2, MapPin, Clock, Users
 } from "lucide-react";
 import { apiClient } from "@/services/api";
 import { useLiveNodes } from "@/hooks/useLiveNodes";
@@ -28,7 +28,7 @@ export default function AdminDashboard() {
                     router.replace("/");
                     return;
                 }
-            } catch (_) {
+            } catch {
                 router.replace("/");
             }
         } else {
@@ -108,8 +108,8 @@ export default function AdminDashboard() {
             await apiClient.approveValidation(node.id, user.id, "Reviewed and confirmed by admin.");
             removeValidation(node.id);
             if (selectedNode?.id === node.id) setSelectedNode(null);
-        } catch (err: any) {
-            alert(`Approval failed: ${err.message}`);
+        } catch (err: unknown) {
+            alert(`Approval failed: ${(err as Error).message}`);
         } finally {
             setActionLoading(null);
         }
@@ -123,8 +123,8 @@ export default function AdminDashboard() {
             await apiClient.rejectValidation(node.id, user.id);
             removeValidation(node.id);
             if (selectedNode?.id === node.id) setSelectedNode(null);
-        } catch (err: any) {
-            alert(`Rejection failed: ${err.message}`);
+        } catch (err: unknown) {
+            alert(`Rejection failed: ${(err as Error).message}`);
         } finally {
             setActionLoading(null);
         }

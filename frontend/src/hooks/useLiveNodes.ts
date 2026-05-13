@@ -27,14 +27,18 @@ export function useLiveNodes(
     const [approvedNodes, setApprovedNodes] = useState<ApprovedNode[]>(initialApproved);
     const [validationNodes, setValidationNodes] = useState<ValidationNode[]>(initialValidation);
 
-    // Sync initial data when it arrives from parent
-    useEffect(() => {
-        if (initialApproved.length > 0) setApprovedNodes(initialApproved);
-    }, [initialApproved]);
+    // Derived state pattern to sync initial data without useEffect warnings
+    const [prevInitialApproved, setPrevInitialApproved] = useState(initialApproved);
+    if (initialApproved !== prevInitialApproved) {
+        setApprovedNodes(initialApproved);
+        setPrevInitialApproved(initialApproved);
+    }
 
-    useEffect(() => {
-        if (initialValidation.length > 0) setValidationNodes(initialValidation);
-    }, [initialValidation]);
+    const [prevInitialValidation, setPrevInitialValidation] = useState(initialValidation);
+    if (initialValidation !== prevInitialValidation) {
+        setValidationNodes(initialValidation);
+        setPrevInitialValidation(initialValidation);
+    }
 
     // ── SSE Connection ───────────────────────────────────────────────────
     useEffect(() => {

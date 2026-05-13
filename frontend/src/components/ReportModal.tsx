@@ -56,8 +56,8 @@ export default function ReportModal({ onClose }: ReportModalProps) {
                 lng: coords.lng,
             });
             setResult({ status: response.status, message: response.message });
-        } catch (err: any) {
-            setResult({ status: "error", message: err.message || "Submission failed." });
+        } catch (err: unknown) {
+            setResult({ status: "error", message: (err as Error).message || "Submission failed." });
         } finally {
             setLoading(false);
         }

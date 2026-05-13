@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { User } from '../types';
 
 export function useUser() {
-    const [user, setUser] = useState<User | null>(null);
-
-    useEffect(() => {
+    const [user, setUser] = useState<User | null>(() => {
+        if (typeof window === 'undefined') return null;
         const saved = localStorage.getItem('citylive_current_user');
         if (saved) {
             try {
-                setUser(JSON.parse(saved));
-            } catch (e) {}
+                return JSON.parse(saved);
+            } catch (e) {
+                return null;
+            }
         }
-    }, []);
+        return null;
+    });
 
     const switchUser = (newUser: User) => {
         localStorage.setItem('citylive_current_user', JSON.stringify(newUser));
@@ -26,7 +28,7 @@ export function useUser() {
             if (saved) {
                 try {
                     setUser(JSON.parse(saved));
-                } catch (e) {}
+                } catch {}
             }
         };
         window.addEventListener('user_changed', handleUserChange);
