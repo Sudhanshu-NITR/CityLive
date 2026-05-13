@@ -101,5 +101,70 @@ pipeline {
                 }
             }
         }
+
+        stage('Build & Push Docker Images') {
+            parallel {
+
+                stage('report-service') {
+                    steps {
+                        script {
+                            def img = docker.build("${REPORT_SERVICE_IMG}:${IMAGE_TAG}", "services/report-service")
+                            docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
+                                img.push()
+                                img.push('latest')
+                            }
+                        }
+                    }
+                }
+
+                stage('user-service') {
+                    steps {
+                        script {
+                            def img = docker.build("${USER_SERVICE_IMG}:${IMAGE_TAG}", "services/user-service")
+                            docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
+                                img.push()
+                                img.push('latest')
+                            }
+                        }
+                    }
+                }
+
+                stage('event-service') {
+                    steps {
+                        script {
+                            def img = docker.build("${EVENT_SERVICE_IMG}:${IMAGE_TAG}", "services/event-service")
+                            docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
+                                img.push()
+                                img.push('latest')
+                            }
+                        }
+                    }
+                }
+
+                stage('api-gateway') {
+                    steps {
+                        script {
+                            def img = docker.build("${API_GATEWAY_IMG}:${IMAGE_TAG}", "services/api-gateway")
+                            docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
+                                img.push()
+                                img.push('latest')
+                            }
+                        }
+                    }
+                }
+
+                stage('frontend') {
+                    steps {
+                        script {
+                            def img = docker.build("${FRONTEND_IMG}:${IMAGE_TAG}", "frontend")
+                            docker.withRegistry('https://index.docker.io/v1/', 'docker-cred') {
+                                img.push()
+                                img.push('latest')
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
