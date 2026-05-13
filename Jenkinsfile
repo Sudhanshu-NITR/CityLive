@@ -23,25 +23,25 @@ pipeline {
             parallel {
                 stage('report-service [pytest]') {
                     steps {
-                        sh """
+                        sh '''
                             docker run --rm \
                             --volumes-from jenkins \
                             -w ${WORKSPACE}/services/report-service \
                             python:3.11-slim \
                             sh -c "pip install -r requirements.txt -q && pytest tests/ -v"
-                        """
+                        '''
                     }
                 }
 
                 stage('user-service [Node]') {
                     steps {
-                        sh """
+                        sh '''
                             docker run --rm \
-                              --volumes-from jenkins \
-                              -w ${WORKSPACE}/services/user-service \
-                              node:18-alpine \
-                              sh -c "npm install --silent && npm test"
-                        """
+                            --volumes-from jenkins \
+                            -w ${WORKSPACE}/services/user-service \
+                            node:18-alpine \
+                            sh -c "npm install --silent && npm test"
+                        '''
                     }
                 }
 
@@ -79,6 +79,25 @@ pipeline {
                             sh -c "npm install --silent && npm run lint"
                         '''
                     }
+                }
+            }
+        }
+
+        stage('Static Code Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+                    sh '''
+                        docker run --rm \
+                        --volumes-from jenkins \
+                        --network cicd-net \
+                        -w ${WORKSPACE} \
+                        -e SONAR_HOST_URL=${SONAR_URL} \
+                        -e SONAR_TOKEN=${SONAR_AUTH_TOKEN} \
+                        sonarsource/sonar-scanner-cli \
+                        -Dsonar.projectKey=citylive \
+                        -Dsonar.sources=services,frontend \
+                        -Dsonar.exclusions=**/node_modules/**,**/.next/**,**/venv/**,**/__pycache__/**,**/.pytest_cache/**
+                    '''
                 }
             }
         }
