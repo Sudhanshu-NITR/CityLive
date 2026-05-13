@@ -194,4 +194,12 @@ pipeline {
             }
         }
     }
+    post {
+        success {
+            echo "✅ Pipeline passed! All images pushed with tag :${IMAGE_TAG}"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check stage logs above."
+        }
+    }
 }
