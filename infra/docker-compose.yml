@@ -1,0 +1,72 @@
+networks:
+  cicd-net:
+    driver: bridge
+
+volumes:
+  jenkins_home:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:
+  postgresql_data:
+
+services:
+
+  # ──────────────────────────────────────────
+  # Jenkins — CI server
+  # ──────────────────────────────────────────
+  jenkins:
+    build:
+      context: ./jenkins
+      dockerfile: Dockerfile
+    container_name: jenkins
+    restart: unless-stopped
+    networks:
+      - cicd-net
+    ports:
+      - "8080:8080" # Jenkins UI
+      - "50000:50000" # Agent communication port
+    volumes:
+      - jenkins_home:/var/jenkins_home # Persist Jenkins config/jobs
+      - /var/run/docker.sock:/var/run/docker.sock # Allow Jenkins to run Docker commands
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=true
+    group_add:
+      - "${DOCKER_GID}"
+
+  # ──────────────────────────────────────────
+  # PostgreSQL — SonarQube's database
+  # ──────────────────────────────────────────
+  sonar-db:
+    image: postgres:15-alpine
+    container_name: sonar-db
+    restart: unless-stopped
+    networks:
+      - cicd-net
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonarqube
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+
+  # ──────────────────────────────────────────
+  # SonarQube — Static code analysis
+  # ──────────────────────────────────────────
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: sonarqube
+    restart: unless-stopped
+    depends_on:
+      - sonar-db
+    networks:
+      - cicd-net
+    ports:
+      - "9000:9000" # SonarQube UI
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonar-db:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
