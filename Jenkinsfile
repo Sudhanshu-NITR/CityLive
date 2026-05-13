@@ -87,6 +87,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
                     sh '''
+                        docker network create cicd-net || true
                         docker run --rm \
                         --volumes-from jenkins \
                         --network cicd-net \
