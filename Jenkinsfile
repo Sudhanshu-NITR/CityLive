@@ -166,5 +166,32 @@ pipeline {
                 }
             }
         }
+
+        stage('Update Manifests') {
+            environment {
+                GIT_REPO_NAME = "citylive-gitops"
+                GIT_USER_NAME = "Sudhanshu-NITR"
+                GIT_USER_EMAIL = "sudhanshu.kadam.99@gmail.com"
+            }
+            steps {
+                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                        git config user.email "${GIT_USER_EMAIL}"
+                        git config user.name "${GIT_USER_NAME}"
+
+                        # Update image tags in all deployment manifests
+                        sed -i "s|${REPORT_SERVICE_IMG}:.*|${REPORT_SERVICE_IMG}:${IMAGE_TAG}|g" k8s/report-service/deployment.yml
+                        sed -i "s|${USER_SERVICE_IMG}:.*|${USER_SERVICE_IMG}:${IMAGE_TAG}|g"     k8s/user-service/deployment.yml
+                        sed -i "s|${EVENT_SERVICE_IMG}:.*|${EVENT_SERVICE_IMG}:${IMAGE_TAG}|g"   k8s/event-service/deployment.yml
+                        sed -i "s|${API_GATEWAY_IMG}:.*|${API_GATEWAY_IMG}:${IMAGE_TAG}|g"       k8s/api-gateway/deployment.yml
+                        sed -i "s|${FRONTEND_IMG}:.*|${FRONTEND_IMG}:${IMAGE_TAG}|g"             k8s/frontend/deployment.yml
+
+                        git add k8s/
+                        git commit -m "ci: update image tags to build ${IMAGE_TAG} [skip ci]"
+                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                    '''
+                }
+            }
+        }
     }
 }
