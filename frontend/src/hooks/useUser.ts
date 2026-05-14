@@ -9,6 +9,7 @@ export function useUser() {
             try {
                 return JSON.parse(saved);
             } catch (e) {
+                console.log(`Could not set user, Error: ${e}`)
                 return null;
             }
         }
@@ -28,7 +29,7 @@ export function useUser() {
             if (saved) {
                 try {
                     setUser(JSON.parse(saved));
-                } catch {}
+                } catch { }
             }
         };
         window.addEventListener('user_changed', handleUserChange);

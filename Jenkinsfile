@@ -39,7 +39,7 @@ pipeline {
                             docker run --rm \
                             --volumes-from jenkins \
                             -w ${WORKSPACE}/services/user-service \
-                            node:18-alpine \
+                            node:20-alpine \
                             sh -c "npm install --silent && npm test"
                         '''
                     }
@@ -75,7 +75,7 @@ pipeline {
                             docker run --rm \
                             --volumes-from jenkins \
                             -w ${WORKSPACE}/frontend \
-                            node:18-alpine \
+                            node:20-alpine \
                             sh -c "npm install --silent && npm run lint"
                         '''
                     }
