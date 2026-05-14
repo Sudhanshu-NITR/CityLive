@@ -13,7 +13,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build-time env vars can be passed via --build-arg if needed
-RUN npm run build
+RUN npm run build && mkdir -p /app/public
 
 # ── Stage 3: Minimal production image ────────────────────────────────────────
 FROM node:20-alpine AS runner
