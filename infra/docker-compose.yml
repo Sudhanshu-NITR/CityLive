@@ -1,5 +1,6 @@
 networks:
   cicd-net:
+    name: cicd-net
     driver: bridge
 
 volumes:
