@@ -1,0 +1,163 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Test report-service
+        working-directory: services/report-service
+        run: |
+          pip install -r requirements.txt -q
+          python -m pytest tests/ -v
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Test api-gateway
+        working-directory: services/api-gateway
+        run: go test ./...
+        
+      - name: Test event-service
+        working-directory: services/event-service
+        run: go test ./...
+      
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      
+      - name: Test user-service
+        working-directory: services/user-service
+        run: npm install && npm test
+      
+      - name: Lint frontend
+        working-directory: frontend
+        run: |
+          npm install --silent
+          npm run lint
+  
+  # sonarqube:
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v6
+  #       with:
+  #         fetch-depth: 0
+
+  #     - name: SonarQube Scan
+  #       uses: SonarSource/sonarqube-scan-action@v5.0.0
+  #       env: 
+  #         SONAR_TOKEN: ${{ secrets.SONAR_AUTH_TOKEN }}
+  #         SONAR_HOST_URL: ${{ vars.SONAR_URL }}
+
+  #       with:
+  #         args: >
+  #           -Dsonar.projectKey=citylive
+  #           -Dsonar.sources=services,frontend
+  #           -Dsonar.exclusions=**/node_modules/**,**/.next/**,**/venv/**,**/__pycache__/**,**/.pytest_cache/**
+  
+  build-push:
+    # needs: sonarqube
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      
+      - name: Build and push report-service
+        id: push-report-service
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: services/report-service
+          push: true
+          tags: |
+            sudh1804/citylive-report-service:${{ github.run_number }}
+            sudh1804/citylive-report-service:latest
+
+      - name: Build and push user-service
+        id: push-user-service
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: services/user-service
+          push: true
+          tags: |
+            sudh1804/citylive-user-service:${{ github.run_number }}
+            sudh1804/citylive-user-service:latest
+
+      - name: Build and push event-service
+        id: push-event-service
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: services/event-service
+          push: true
+          tags: |
+            sudh1804/citylive-event-service:${{ github.run_number }}
+            sudh1804/citylive-event-service:latest
+
+      - name: Build and push api-gateway
+        id: push-api-gateway
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: services/api-gateway
+          push: true
+          tags: |
+            sudh1804/citylive-api-gateway:${{ github.run_number }}
+            sudh1804/citylive-api-gateway:latest
+
+      - name: Build and push frontend
+        id: push-frontend
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: frontend
+          push: true
+          tags: |
+            sudh1804/citylive-frontend:${{ github.run_number }}
+            sudh1804/citylive-frontend:latest
+
+  update-manifests:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitOps repo
+        uses: actions/checkout@v6
+        with:
+          repository: Sudhanshu-NITR/CityLive-GitOps
+          token: ${{ secrets.GITHUB_TOKEN }}
+        
+      - name: Update image tags
+        run: |
+          sed -i "s|sudh1804/citylive-report-service:.*|sudh1804/citylive-report-service:${{ github.run_number }}|g" k8s/report-service/deployment.yml
+          sed -i "s|sudh1804/citylive-user-service:.*|sudh1804/citylive-user-service:${{ github.run_number }}|g"     k8s/user-service/deployment.yml
+          sed -i "s|sudh1804/citylive-event-service:.*|sudh1804/citylive-event-service:${{ github.run_number }}|g"   k8s/event-service/deployment.yml
+          sed -i "s|sudh1804/citylive-api-gateway:.*|sudh1804/citylive-api-gateway:${{ github.run_number }}|g"       k8s/api-gateway/deployment.yml
+          sed -i "s|sudh1804/citylive-frontend:.*|sudh1804/citylive-frontend:${{ github.run_number }}|g"             k8s/frontend/deployment.yml
+        
+      - name: Commit & push
+        run: |
+          git config user.email "sudhanshu.kadam.99@gmail.com"
+          git config user.name "GitHub Actions"
+          git add k8s/
+          git commit -m "ci: update image tags to ${{ github.run_number }} [skip ci]"
+          git push
+          

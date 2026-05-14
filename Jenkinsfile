@@ -170,7 +170,7 @@ pipeline {
 
         stage('Update Manifests') {
             environment {
-                GIT_REPO_NAME = "citylive-gitops"
+                GIT_REPO_NAME = "CityLive-GitOps"
                 GIT_USER_NAME = "Sudhanshu-NITR"
                 GIT_USER_EMAIL = "sudhanshu.kadam.99@gmail.com"
             }
