@@ -71,7 +71,7 @@ func SetupRouter(cfg *config.Config) *http.ServeMux {
 	}
 	eventProxy := httputil.NewSingleHostReverseProxy(eventTarget)
 
-	mux.HandleFunc("/stream", withCORS(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/stream", withCORS(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("[Gateway] -> Event Service: SSE /stream")
 		// SSE requires flushing — disable buffering
 		w.Header().Set("X-Accel-Buffering", "no")

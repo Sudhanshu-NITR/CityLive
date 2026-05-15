@@ -1,4 +1,4 @@
-// src/services/api.ts
+// src/services.ts
 import { ApprovedNode, ValidationNode, ReportNode, ReportRequest, User } from "../types";
 
 const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "/api";
@@ -26,14 +26,14 @@ export const apiClient = {
 
     /** All admin-verified active hazards (large red markers) */
     getApprovedNodes: async (): Promise<ApprovedNode[]> => {
-        const res = await fetch(`${GATEWAY_URL}/api/v1/approved_nodes`);
+        const res = await fetch(`${GATEWAY_URL}/v1/approved_nodes`);
         if (!res.ok) throw new Error("Failed to fetch approved nodes");
         return res.json();
     },
 
     /** Submit a citizen hazard report */
     submitReport: async (report: ReportRequest) => {
-        const res = await fetch(`${GATEWAY_URL}/api/v1/reports`, {
+        const res = await fetch(`${GATEWAY_URL}/v1/reports`, {
             method: "POST",
             headers: authHeaders(),
             body: JSON.stringify(report),
@@ -49,7 +49,7 @@ export const apiClient = {
 
     /** All pending ValidationNodes (yellow markers + admin queue) */
     getValidationNodes: async (): Promise<ValidationNode[]> => {
-        const res = await fetch(`${GATEWAY_URL}/api/v1/validation_nodes`, {
+        const res = await fetch(`${GATEWAY_URL}/v1/validation_nodes`, {
             headers: authHeaders(),
         });
         if (!res.ok) throw new Error("Failed to fetch validation nodes");
@@ -59,7 +59,7 @@ export const apiClient = {
     /** All ReportNodes linked to a specific ValidationNode */
     getReportsForValidation: async (validationId: string): Promise<ReportNode[]> => {
         const res = await fetch(
-            `${GATEWAY_URL}/api/v1/validation/${validationId}/reports`,
+            `${GATEWAY_URL}/v1/validation/${validationId}/reports`,
             { headers: authHeaders() }
         );
         if (!res.ok) throw new Error("Failed to fetch reports");
@@ -72,7 +72,7 @@ export const apiClient = {
         adminId: string,
         explanation: string
     ) => {
-        const res = await fetch(`${GATEWAY_URL}/api/v1/admin/validate/${validationId}`, {
+        const res = await fetch(`${GATEWAY_URL}/v1/admin/validate/${validationId}`, {
             method: "POST",
             headers: authHeaders(),
             body: JSON.stringify({ action: "approve", admin_id: adminId, explanation }),
@@ -86,7 +86,7 @@ export const apiClient = {
 
     /** Admin reject: marks ValidationNode + linked ReportNodes as discarded */
     rejectValidation: async (validationId: string, adminId: string) => {
-        const res = await fetch(`${GATEWAY_URL}/api/v1/admin/validate/${validationId}`, {
+        const res = await fetch(`${GATEWAY_URL}/v1/admin/validate/${validationId}`, {
             method: "POST",
             headers: authHeaders(),
             body: JSON.stringify({ action: "reject", admin_id: adminId, explanation: "" }),
@@ -102,14 +102,14 @@ export const apiClient = {
 
     /** Predictive AI insights based on active ApprovedNodes */
     getInsights: async (): Promise<{ title: string; description: string }[]> => {
-        const res = await fetch(`${GATEWAY_URL}/api/v1/ai-insights`);
+        const res = await fetch(`${GATEWAY_URL}/v1/ai-insights`);
         if (!res.ok) throw new Error("Failed to fetch insights");
         return res.json();
     },
 
     /** All users (for UserSwitcher) */
     getUsers: async (): Promise<User[]> => {
-        const res = await fetch(`${GATEWAY_URL}/api/v1/users`);
+        const res = await fetch(`${GATEWAY_URL}/v1/users`);
         if (!res.ok) throw new Error("Failed to fetch users");
         return res.json();
     },
