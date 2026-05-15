@@ -1,7 +1,7 @@
 // src/services/api.ts
 import { ApprovedNode, ValidationNode, ReportNode, ReportRequest, User } from "../types";
 
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:8080";
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "/api";
 
 // ── Build headers with current user context (for gateway middleware) ────────
 function authHeaders(): HeadersInit {
