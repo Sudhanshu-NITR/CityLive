@@ -18,14 +18,22 @@ export default function UserSwitcher() {
         const loadUsers = async () => {
             try {
                 const data = await apiClient.getUsers();
-                console.log("data-> ", data);
                 setUsers(data || []);
                 // If no user is logged in, default to the first citizen
                 if (!localStorage.getItem('citylive_current_user') && data.length > 0) {
                     switchUser(data.find((u: User) => u.role === "citizen") || data[0]);
                 }
             } catch (err) {
-                console.error("Failed to load users for switcher:", err);
+                console.error("Failed to load users for switcher, using demo personas:", err);
+                // ── Demo fallback: works without a backend (e.g. Vercel preview) ──
+                const demoUsers: User[] = [
+                    { id: "demo-citizen", name: "Demo Citizen", credibility_score: 80, role: "citizen" },
+                    { id: "demo-admin",   name: "Demo Admin",   credibility_score: 100, role: "admin"   },
+                ];
+                setUsers(demoUsers);
+                if (!localStorage.getItem('citylive_current_user')) {
+                    switchUser(demoUsers[0]);
+                }
             }
         };
         loadUsers();

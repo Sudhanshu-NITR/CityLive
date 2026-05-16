@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User } from '../types';
 
 export function useUser() {
@@ -16,11 +16,11 @@ export function useUser() {
         return null;
     });
 
-    const switchUser = (newUser: User) => {
+    const switchUser = useCallback((newUser: User) => {
         localStorage.setItem('citylive_current_user', JSON.stringify(newUser));
         setUser(newUser);
         window.dispatchEvent(new Event('user_changed')); // Sync across components
-    };
+    }, []);
 
     // Listen for cross-component changes
     useEffect(() => {

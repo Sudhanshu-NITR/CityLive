@@ -55,19 +55,19 @@ The platform is engineered with a **polyglot microservices architecture**, a ful
 
 ---
 
-<!-- ## 📸 Screenshots
+## 📸 Screenshots
 
 ### Citizen Map View
 > The interactive real-time hazard map. Red markers = Admin-verified. Amber markers = AI-detected, pending review.
 
-![CityLive Citizen Map](./assets/citylive_ui_mockup.png)
+![CityLive Citizen Map](/frontend/public/citylive_ui.png)
 
 ### Admin Command Center
 > Admins review AI-clustered validation nodes, inspect source reports, and approve or reject with one click.
 
-![CityLive Admin Dashboard](./assets/citylive_admin_mockup.png)
+![CityLive Admin Dashboard](/frontend/public/citylive_admin.png)
 
---- -->
+---
 
 ## 🏗️ System Architecture
 
