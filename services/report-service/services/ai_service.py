@@ -8,10 +8,12 @@ Uses Gemini 2.5 Flash with native function calling for:
 """
 import json
 import uuid
+import time
 import google.genai as genai
 from google.genai import types as genai_types
 from typing import Dict, List
 from core.config import config
+from core.profiler import profiler
 
 
 # Radius (km) per hazard type — best balance between over-clustering and fragmentation
@@ -164,6 +166,8 @@ IMPORTANT:
 """
 
         try:
+            t_start = time.perf_counter()
+
             chat = self.client.chats.create(
                 model="gemini-2.5-flash",
                 config=genai_types.GenerateContentConfig(
@@ -176,6 +180,10 @@ IMPORTANT:
             response = chat.send_message(
                 f"Triage this report: ID={report_id}, description='{description}'"
             )
+
+            elapsed_ms = (time.perf_counter() - t_start) * 1000
+            print(f"[PROFILE][SentinalAgent] latency={elapsed_ms:.1f}ms report_id={report_id}")
+            profiler.record("sentinel_agent", elapsed_ms)   
 
             # Parse the agent's final JSON decision
             raw_text = response.text.strip()
@@ -269,6 +277,8 @@ YOUR TASK:
 """
 
         try:
+            t_start = time.perf_counter()
+
             chat = self.client.chats.create(
                 model="gemini-2.5-flash",
                 config=genai_types.GenerateContentConfig(
@@ -278,6 +288,10 @@ YOUR TASK:
                 ),
             )
             response = chat.send_message("Process this admin approval now.")
+
+            elapsed_ms = (time.perf_counter() - t_start) * 1000
+            print(f"[PROFILE][ApprovalAgent] latency={elapsed_ms:.1f}ms  validation_id={validation_id}")
+            profiler.record("approval_agent", elapsed_ms)
 
             raw_text = response.text.strip()
             if raw_text.startswith("```"):
@@ -334,11 +348,18 @@ Respond ONLY with a valid JSON array, no markdown:
 ]
 """
         try:
+            t_start = time.perf_counter()
+
             response = self.client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=genai_types.GenerateContentConfig(temperature=0.4),
             )
+
+            elapsed_ms = (time.perf_counter() - t_start) * 1000
+            print(f"[PROFILE][PredictiveAgent] latency={elapsed_ms:.1f}ms")
+            profiler.record("predictive_agent", elapsed_ms)
+
             clean = response.text.strip()
             if clean.startswith("```"):
                 clean = clean.split("```")[1]

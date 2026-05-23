@@ -7,6 +7,7 @@ from services.report_service import ReportService
 from infrastructure.neo4j_repository import Neo4jRepository
 from infrastructure.user_client import UserClient
 from infrastructure.event_publisher import EventPublisher
+from core.profiler import profiler
 
 router = APIRouter()
 
@@ -26,6 +27,12 @@ def get_report_service() -> ReportService:
 @router.get("/health")
 def health_check():
     return {"status": "healthy", "service": "report-service"}
+
+@router.get("/debug/latency-report")
+def latency_report():
+    """Prints the p50/p95/p99 report to server logs and returns the raw data."""
+    profiler.report()
+    return profiler._samples
 
 
 # ── USER ROUTES ────────────────────────────────────────────────────────────
